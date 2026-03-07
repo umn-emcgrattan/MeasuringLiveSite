@@ -457,14 +457,37 @@ Last Updated: 02/25/2026
   }
 
   function recomputeAdjustedData() {
-    adjustedData = [];
+    adjustedData = rawData.map(row => ({
+      ...row,
+      cols: [...row.cols]
+    }));
+
+    const leftRoot = adjustedData.find(r => r.cols[0] === currentAssetVariable);
+    const rightRoot = adjustedData.find(r => r.cols[0] === currentLiabilityVariable);
+
     const stack = [];
+    let prevSection = null;
 
-    rawData.forEach(row => {
-      const newRow = { cols: [...row.cols], indent: row.indent };
+    rawData.forEach((row, idx) => {
+      const newRow = adjustedData[idx];
 
-      if (row.cols[0] === leftPanelTitle || row.cols[0] === rightPanelTitle) {
+      // For the special split datasets, reset by section
+      if (row.section !== prevSection) {
         stack.length = 0;
+        prevSection = row.section;
+
+        // Seed each side with the series that is actually plotted
+        if (row.section === "left" && leftRoot) {
+          stack.push(leftRoot);
+        }
+        if (row.section === "right" && rightRoot) {
+          stack.push(rightRoot);
+        }
+      }
+
+      // Skip the plotted roots themselves so they don't try to adjust themselves
+      if (row.cols[0] === currentAssetVariable || row.cols[0] === currentLiabilityVariable) {
+        return;
       }
 
       while (stack.length && stack[stack.length - 1].indent >= row.indent) {
@@ -472,8 +495,8 @@ Last Updated: 02/25/2026
       }
 
       const add = row.cols[0].startsWith("Less:");
-
       const rowKey = `${row.section}||${row.cols[0]}`;
+
       if (excludedSeries.has(rowKey)) {
         stack.forEach(ancestor => {
           for (let i = 1; i < ancestor.cols.length; i++) {
@@ -485,7 +508,6 @@ Last Updated: 02/25/2026
       }
 
       stack.push(newRow);
-      adjustedData.push(newRow);
     });
   }
 
