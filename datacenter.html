@@ -1223,38 +1223,195 @@ Last Updated: 02/25/2026
 
   // Download raw and adjusted values for selected series
   downloadSeries.addEventListener("click", () => {
-    let output = "Year,Asset Raw,Asset Adjusted,Liability Raw,Liability Adjusted\n";
-    
     const years = csvHeaders.slice(1).map(Number);
-    
-    const assetRow = (currentDatasetMode === "split")
-      ? rawData.find(r => r.section === "left" && r.cols[0] === currentAssetVariable)
-      : rawData.find(r => r.cols[0] === currentAssetVariable);
 
-    const liabilityRow = (currentDatasetMode === "split")
-      ? rawData.find(r => r.section === "right" && r.cols[0] === currentLiabilityVariable)
-      : rawData.find(r => r.cols[0] === currentLiabilityVariable);
+    if (!years.length) return;
+
+    // single mode
+    if (currentDatasetMode === "single") {
+      const selectedRows = rawData.filter(
+        r => !excludedSeries.has(`left||${r.cols[0]}`)
+      );
+
+      let rawTotalSeries = years.map(() => 0);
+      let adjustedTotalSeries = years.map(() => 0);
+
+      rawData.forEach(row => {
+        const vals = row.cols.slice(1).map(v => parseFloat(v));
+        for (let i = 0; i < years.length; i++) {
+          if (Number.isFinite(vals[i])) rawTotalSeries[i] += vals[i];
+        }
+      });
+
+      selectedRows.forEach(row => {
+        const vals = row.cols.slice(1).map(v => parseFloat(v));
+        for (let i = 0; i < years.length; i++) {
+          if (Number.isFinite(vals[i])) adjustedTotalSeries[i] += vals[i];
+        }
+      });
+
+      if (isNormalized) {
+        const finiteRaw = rawTotalSeries.filter(v => Number.isFinite(v));
+        const finiteAdj = adjustedTotalSeries.filter(v => Number.isFinite(v));
+        const maxVal = Math.max(...finiteRaw, ...finiteAdj, 1);
+
+        rawTotalSeries = rawTotalSeries.map(v =>
+          Number.isFinite(v) ? (v / maxVal) * 100 : v
+        );
+        adjustedTotalSeries = adjustedTotalSeries.map(v =>
+          Number.isFinite(v) ? (v / maxVal) * 100 : v
+        );
+      }
+
+      let output = `Year,${isNormalized ? "Normalized Raw" : "Raw"},${isNormalized ? "Normalized Adjusted" : "Adjusted"}\n`;
+
+      for (let i = 0; i < years.length; i++) {
+        if (years[i] >= startYear && years[i] <= endYear) {
+          output += `${years[i]},${rawTotalSeries[i] ?? ""},${adjustedTotalSeries[i] ?? ""}\n`;
+        }
+      }
+
+      const blob = new Blob([output], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Individual_Totals_${startYear}-${endYear}.csv`;
+      link.click();
+      return;
+    }
+
+    // split mode
+    if (currentDatasetMode === "split") {
+      let leftRawVals = years.map(() => 0);
+      let rightRawVals = years.map(() => 0);
+
+      rawData.forEach(row => {
+        const vals = row.cols.slice(1).map(v => parseFloat(v));
+        const add = row.cols[0].startsWith("Less:");
+
+        if (row.section === "left") {
+          for (let i = 0; i < years.length; i++) {
+            const v = vals[i];
+            if (Number.isFinite(v)) {
+              leftRawVals[i] += add ? -v : v;
+            }
+          }
+        }
+
+        if (row.section === "right") {
+          for (let i = 0; i < years.length; i++) {
+            const v = vals[i];
+            if (Number.isFinite(v)) {
+              rightRawVals[i] += add ? -v : v;
+            }
+          }
+        }
+      });
+
+      // Adjusted totals come from adjustedData synthetic roots
+      const leftAdjRow = adjustedData.find(
+        r => r.section === "left" && r.cols[0] === currentAssetVariable
+      );
+      const rightAdjRow = adjustedData.find(
+        r => r.section === "right" && r.cols[0] === currentLiabilityVariable
+      );
+
+      let leftAdjVals = leftAdjRow
+        ? leftAdjRow.cols.slice(1).map(v => parseFloat(v))
+        : leftRawVals.slice();
+
+      let rightAdjVals = rightAdjRow
+        ? rightAdjRow.cols.slice(1).map(v => parseFloat(v))
+        : rightRawVals.slice();
+
+      // normalize if needed
+      if (isNormalized) {
+        const leftMax = Math.max(
+          ...leftRawVals.filter(v => Number.isFinite(v)),
+          ...leftAdjVals.filter(v => Number.isFinite(v)),
+          1
+        );
+        const rightMax = Math.max(
+          ...rightRawVals.filter(v => Number.isFinite(v)),
+          ...rightAdjVals.filter(v => Number.isFinite(v)),
+          1
+        );
+
+        leftRawVals = leftRawVals.map(v => Number.isFinite(v) ? (v / leftMax) * 100 : v);
+        leftAdjVals = leftAdjVals.map(v => Number.isFinite(v) ? (v / leftMax) * 100 : v);
+        rightRawVals = rightRawVals.map(v => Number.isFinite(v) ? (v / rightMax) * 100 : v);
+        rightAdjVals = rightAdjVals.map(v => Number.isFinite(v) ? (v / rightMax) * 100 : v);
+      }
+
+      let output =
+        `Year,` +
+        `${leftPanelTitle} ${isNormalized ? "Normalized Raw" : "Raw"},` +
+        `${leftPanelTitle} ${isNormalized ? "Normalized Adjusted" : "Adjusted"},` +
+        `${rightPanelTitle} ${isNormalized ? "Normalized Raw" : "Raw"},` +
+        `${rightPanelTitle} ${isNormalized ? "Normalized Adjusted" : "Adjusted"}\n`;
+
+      for (let i = 0; i < years.length; i++) {
+        if (years[i] >= startYear && years[i] <= endYear) {
+          output += [
+            years[i],
+            leftRawVals[i] ?? "",
+            leftAdjVals[i] ?? "",
+            rightRawVals[i] ?? "",
+            rightAdjVals[i] ?? ""
+          ].join(",") + "\n";
+        }
+      }
+
+      const blob = new Blob([output], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${currentAssetVariable}_${currentLiabilityVariable}_${startYear}-${endYear}.csv`;
+      link.click();
+      return;
+    }
+
+    // regular mode
+    let output = "Year,Asset Raw,Asset Adjusted,Liability Raw,Liability Adjusted\n";
+
+    const assetRow = rawData.find(r => r.cols[0] === currentAssetVariable);
+    const liabilityRow = rawData.find(r => r.cols[0] === currentLiabilityVariable);
 
     if (!assetRow && !liabilityRow) return;
 
-    const assetRawVals = assetRow ? assetRow.cols.slice(1).map(v => parseFloat(v)) : [];
-    const assetAdjRow = (currentDatasetMode === "split")
-      ? adjustedData.find(r => r.section === "left" && r.cols[0] === currentAssetVariable)
-      : adjustedData.find(r => r.cols[0] === currentAssetVariable);
-    const assetAdjVals = assetAdjRow ? assetAdjRow.cols.slice(1).map(v => parseFloat(v)) : assetRawVals;
+    let assetRawVals = assetRow ? assetRow.cols.slice(1).map(v => parseFloat(v)) : years.map(() => "");
+    let liabilityRawVals = liabilityRow ? liabilityRow.cols.slice(1).map(v => parseFloat(v)) : years.map(() => "");
 
-    const liabilityRawVals = liabilityRow ? liabilityRow.cols.slice(1).map(v => parseFloat(v)) : [];
-    const liabilityAdjRow = (currentDatasetMode === "split")
-      ? adjustedData.find(r => r.section === "right" && r.cols[0] === currentLiabilityVariable)
-      : adjustedData.find(r => r.cols[0] === currentLiabilityVariable);
-    const liabilityAdjVals = liabilityAdjRow ? liabilityAdjRow.cols.slice(1).map(v => parseFloat(v)) : liabilityRawVals;
-    
+    const assetAdjRow = adjustedData.find(r => r.cols[0] === currentAssetVariable);
+    const liabilityAdjRow = adjustedData.find(r => r.cols[0] === currentLiabilityVariable);
+
+    let assetAdjVals = assetAdjRow ? assetAdjRow.cols.slice(1).map(v => parseFloat(v)) : assetRawVals.slice();
+    let liabilityAdjVals = liabilityAdjRow ? liabilityAdjRow.cols.slice(1).map(v => parseFloat(v)) : liabilityRawVals.slice();
+
+    if (isNormalized) {
+      const assetMax = Math.max(
+        ...assetRawVals.filter(v => Number.isFinite(v)),
+        ...assetAdjVals.filter(v => Number.isFinite(v)),
+        1
+      );
+      const liabilityMax = Math.max(
+        ...liabilityRawVals.filter(v => Number.isFinite(v)),
+        ...liabilityAdjVals.filter(v => Number.isFinite(v)),
+        1
+      );
+
+      assetRawVals = assetRawVals.map(v => Number.isFinite(v) ? (v / assetMax) * 100 : v);
+      assetAdjVals = assetAdjVals.map(v => Number.isFinite(v) ? (v / assetMax) * 100 : v);
+      liabilityRawVals = liabilityRawVals.map(v => Number.isFinite(v) ? (v / liabilityMax) * 100 : v);
+      liabilityAdjVals = liabilityAdjVals.map(v => Number.isFinite(v) ? (v / liabilityMax) * 100 : v);
+
+      output = "Year,Asset Normalized Raw,Asset Normalized Adjusted,Liability Normalized Raw,Liability Normalized Adjusted\n";
+    }
+
     for (let i = 0; i < years.length; i++) {
       if (years[i] >= startYear && years[i] <= endYear) {
-        output += `${years[i]},${assetRawVals[i] || ''},${assetAdjVals[i] || ''},${liabilityRawVals[i] || ''},${liabilityAdjVals[i] || ''}\n`;
+        output += `${years[i]},${assetRawVals[i] ?? ""},${assetAdjVals[i] ?? ""},${liabilityRawVals[i] ?? ""},${liabilityAdjVals[i] ?? ""}\n`;
       }
     }
-    
+
     const blob = new Blob([output], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
