@@ -3,7 +3,7 @@ Created and maintained by student research assistants at the
           HELLER-HURWICZ ECONOMICS INSTITUTE
         University of Minnesota - Twin Cities
 
-Last Updated: 02/25/2026
+Last Updated: 04/08/2026
 -->
 
 <!DOCTYPE html>
@@ -820,8 +820,8 @@ Last Updated: 02/25/2026
       row.section = currentSection;
 
       if (value === startRow) startRowFound = true;
-      if (endRow && value === endRow) endRowFound = true;
       if (!startRowFound || endRowFound) return;
+
       if (value.includes("Addendum")) return;
 
       // Variable names
@@ -930,6 +930,8 @@ Last Updated: 02/25/2026
 
       refreshTableUI(leftTable);
       refreshTableUI(rightTable);
+
+      if (endRow && value === endRow) endRowFound = true;
     }
   );
 
@@ -988,10 +990,15 @@ Last Updated: 02/25/2026
     const rootUl = document.createElement("ul");
     container.appendChild(rootUl);
 
-    const rootLi = nestedList(title, true);
-    rootLi.dataset.section = sectionName;
-    rootLi.dataset.plotValue = title;
-    rootUl.appendChild(rootLi);
+    rows.forEach((row) => {
+      const value = row.cols[0];
+
+      const li = nestedList(value, false);
+      li.dataset.plotValue = value;
+      li.dataset.section = sectionName;
+
+      rootUl.appendChild(li);
+    });
 
     const childUl = document.createElement("ul");
     childUl.style.display = "block";
@@ -1423,17 +1430,26 @@ Last Updated: 02/25/2026
   downloadFull.addEventListener("click", () => {
     if (!csvHeaders.length || !rawData.length) return;
 
+    function escapeCSVValue(value) {
+      if (value === null || value === undefined) return "";
+      const str = String(value);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    }
+
     let output = "";
 
     // Header row
-    output += csvHeaders.join(",") + "\n";
+    output += csvHeaders.map(escapeCSVValue).join(",") + "\n";
 
-    // Data rows (preserve indentation visually if you want)
+    // Data rows
     rawData.forEach(row => {
       const indent = " ".repeat(row.indent);
       const cols = [...row.cols];
       cols[0] = indent + cols[0];
-      output += cols.join(",") + "\n";
+      output += cols.map(escapeCSVValue).join(",") + "\n";
     });
 
     const blob = new Blob([output], { type: "text/csv" });
