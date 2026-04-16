@@ -477,7 +477,7 @@ Last Updated: 04/08/2026
       cols: [...row.cols]
     }));
 
-   // regular datasets
+    // regular datasets
     if (currentDatasetMode === "regular") {
       const stack = [];
 
@@ -493,7 +493,13 @@ Last Updated: 04/08/2026
         const add = row.cols[0].startsWith("Less:");
         const rowKey = `${row.section}||${row.cols[0]}`;
 
-        if (excludedSeries.has(rowKey)) {
+        // NEW:
+        // if any excluded ancestor is already in effect, do not subtract this row again
+        const coveredByExcludedAncestor = stack.some(
+          ancestor => excludedSeries.has(`${ancestor.section}||${ancestor.cols[0]}`)
+        );
+
+        if (excludedSeries.has(rowKey) && !coveredByExcludedAncestor) {
           stack.forEach(ancestor => {
             for (let i = 1; i < ancestor.cols.length; i++) {
               let val = parseFloat(row.cols[i]);
@@ -618,57 +624,26 @@ Last Updated: 04/08/2026
   }
 
   function setAllForSide(tableEl, makeExcluded) {
-    // single datasets
-    if (currentDatasetMode === "single") {
-      rawData.forEach(row => {
-        const k = `left||${row.cols[0]}`;
-        if (makeExcluded) excludedSeries.add(k);
-        else excludedSeries.delete(k);
-      });
+    const allLis = Array.from(tableEl.querySelectorAll("li"));
 
-      refreshTableUI(leftTable);
-      updateChart();
-      return;
-    }
-
-    // regular datasets
-    if (currentDatasetMode === "regular") {
-      const side = (tableEl === leftTable) ? "left" : "right";
-      const rootLabel = (side === "left") ? currentAssetVariable : currentLiabilityVariable;
-
-      rawData.forEach(row => {
-        if (row.section !== side) return;
-        if (row.cols[0] === rootLabel) return;
-
-        const k = `${row.section}||${row.cols[0]}`;
-        if (makeExcluded) excludedSeries.add(k);
-        else excludedSeries.delete(k);
-      });
-
-      recomputeAdjustedData();
-      refreshTableUI(leftTable);
-      refreshTableUI(rightTable);
-      updateChart();
-      return;
-    }
-
-    // split tables 2 and 6
-    const leafLis = tableEl.querySelectorAll("li");
-    leafLis.forEach(li => {
+    allLis.forEach(li => {
       const key = li.dataset.plotValue;
       const section = li.dataset.section;
-      const check = li.querySelector(".checkmark");
-      if (!key || !section || !check) return;
-      if (li.querySelector("ul")) return;
+      if (!key || !section) return;
 
       const k = `${section}||${key}`;
       if (makeExcluded) excludedSeries.add(k);
       else excludedSeries.delete(k);
     });
 
-    recomputeAdjustedData();
-    refreshTableUI(leftTable);
-    refreshTableUI(rightTable);
+    if (currentDatasetMode !== "single") {
+      recomputeAdjustedData();
+      refreshTableUI(leftTable);
+      refreshTableUI(rightTable);
+    } else {
+      refreshTableUI(leftTable);
+    }
+
     updateChart();
   }
 
@@ -676,7 +651,7 @@ Last Updated: 04/08/2026
     const li = document.createElement("li");
     li.style.cursor = "pointer";
 
-    let arrow;
+    let arrow = null;
     if (hasChildren) {
       arrow = document.createElement("span");
       arrow.textContent = "▼ ";
@@ -697,13 +672,10 @@ Last Updated: 04/08/2026
       });
     }
 
-    let excludeBtn = null;
-    if (!hasChildren) {
-      excludeBtn = document.createElement("span");
-      excludeBtn.textContent = "✔ ";
-      excludeBtn.classList.add("checkmark");
-      li.appendChild(excludeBtn);
-    }
+    const excludeBtn = document.createElement("span");
+    excludeBtn.textContent = "✔ ";
+    excludeBtn.classList.add("checkmark");
+    li.appendChild(excludeBtn);
 
     const label = document.createElement("span");
     label.textContent = text;
@@ -711,8 +683,6 @@ Last Updated: 04/08/2026
     li.appendChild(label);
 
     function syncCheckmark() {
-      if (hasChildren) return;
-
       const key = `${li.dataset.section}||${li.dataset.plotValue}`;
       const isExcluded = excludedSeries.has(key);
       const code = li.dataset.varCode ? ` ${li.dataset.varCode}` : "";
@@ -725,16 +695,17 @@ Last Updated: 04/08/2026
     function handleToggle(e) {
       e.stopPropagation();
       const key = `${li.dataset.section}||${li.dataset.plotValue}`;
+      if (!li.dataset.plotValue || !li.dataset.section) return;
       toggleExclude(key);
       syncCheckmark();
       updateChart();
     }
 
-    if (!hasChildren) {
-      label.addEventListener("click", handleToggle);
-      excludeBtn.addEventListener("click", handleToggle);
-      syncCheckmark();
-    }
+    label.addEventListener("click", handleToggle);
+    excludeBtn.addEventListener("click", handleToggle);
+
+    li.syncCheckmark = syncCheckmark;
+    syncCheckmark();
 
     return li;
   }
@@ -860,12 +831,9 @@ Last Updated: 04/08/2026
         // Top-level row
         if (stack.length === 0) {
           const li = nestedList(value, willHaveChildren);
+          li.dataset.plotValue = value;
+          li.dataset.section = (sectionContainer === leftTable) ? "left" : "right";
           sectionRootUl.appendChild(li);
-
-          if (!willHaveChildren) {
-            li.dataset.plotValue = value; // raw label
-            li.dataset.section = (sectionContainer === leftTable) ? "left" : "right";
-          }
 
           let childUl = null;
           if (willHaveChildren) {
@@ -1024,6 +992,7 @@ Last Updated: 04/08/2026
 
       if (isTopLevelMarker) {
         currentRootLi = nestedList(value, true);
+        currentRootLi.dataset.plotValue = value;
         currentRootLi.dataset.section = sectionName;
         rootUl.appendChild(currentRootLi);
 
