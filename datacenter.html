@@ -1278,12 +1278,20 @@ Last Updated: 04/08/2026
       });
 
       // Adjusted totals come from adjustedData synthetic roots
-      const leftAdjRow = adjustedData.find(
+      const leftAdjMatches = adjustedData.filter(
         r => r.section === "left" && r.cols[0] === currentAssetVariable
       );
-      const rightAdjRow = adjustedData.find(
+      const rightAdjMatches = adjustedData.filter(
         r => r.section === "right" && r.cols[0] === currentLiabilityVariable
       );
+
+      const leftAdjRow = leftAdjMatches.length
+        ? leftAdjMatches[leftAdjMatches.length - 1]
+        : null;
+
+      const rightAdjRow = rightAdjMatches.length
+        ? rightAdjMatches[rightAdjMatches.length - 1]
+        : null;
 
       let leftAdjVals = leftAdjRow
         ? leftAdjRow.cols.slice(1).map(v => parseFloat(v))
@@ -1471,29 +1479,69 @@ Last Updated: 04/08/2026
    */ 
   function updateSingleChart(type, label, canvasElement, tableElement) {
     const targetSection = (type === "assets") ? "left" : "right";
-
-    const row = rawData.find(
-      r => r.section === targetSection && r.cols[0] === label
-    );
-    if (!row) return;
-
     const allYears = csvHeaders.slice(1).map(Number);
-    let allRaw = row.cols.slice(1).map(v => parseFloat(v));
 
-    const rowAdjusted = (currentDatasetMode === "split")
-      ? adjustedData.find(r => r.section === targetSection && r.cols[0] === label)
-      : adjustedData.find(r => r.cols[0] === label);
+    let allRaw = [];
+    let allAdj = [];
 
-    let allAdj = rowAdjusted ? rowAdjusted.cols.slice(1).map(Number) : allRaw;
+    if (currentDatasetMode === "split") {
+      const sideRows = rawData.filter(r => r.section === targetSection);
 
-    // Apply normalization if enabled
+      const rawSeries = allYears.map(() => 0);
+
+      sideRows.forEach(row => {
+        const original = (row.originalName || "").trim();
+        const isTopLevelMarker =
+          row.indent <= 2 && (original.startsWith("=") || original.startsWith("+"));
+
+        // right-side marker rows are just group labels
+        if (targetSection === "right" && isTopLevelMarker) return;
+
+        const vals = row.cols.slice(1).map(v => parseFloat(v));
+        const add = row.cols[0].startsWith("Less:");
+
+        for (let i = 0; i < allYears.length; i++) {
+          const v = vals[i];
+          if (!Number.isFinite(v)) continue;
+          rawSeries[i] += add ? -v : v;
+        }
+      });
+
+      allRaw = rawSeries;
+
+      // use LAST match because split mode appends synthetic root rows later
+      const matches = adjustedData.filter(
+        r => r.section === targetSection && r.cols[0] === label
+      );
+      const rowAdjusted = matches.length ? matches[matches.length - 1] : null;
+
+      allAdj = rowAdjusted
+        ? rowAdjusted.cols.slice(1).map(v => parseFloat(v))
+        : allRaw.slice();
+
+    } else {
+      const row = rawData.find(
+        r => r.section === targetSection && r.cols[0] === label
+      );
+      if (!row) return;
+
+      allRaw = row.cols.slice(1).map(v => parseFloat(v));
+
+      const rowAdjusted = adjustedData.find(
+        r => r.section === targetSection && r.cols[0] === label
+      );
+      allAdj = rowAdjusted
+        ? rowAdjusted.cols.slice(1).map(v => parseFloat(v))
+        : allRaw.slice();
+    }
+
     if (isNormalized) {
-      const maxRaw = Math.max(...allRaw.filter(v => !isNaN(v)));
-      const maxAdj = Math.max(...allAdj.filter(v => !isNaN(v)));
-      const maxVal = Math.max(maxRaw, maxAdj, 1); // Avoid division by zero
-      
-      allRaw = allRaw.map(v => (v / maxVal) * 100);
-      allAdj = allAdj.map(v => (v / maxVal) * 100);
+      const maxRaw = Math.max(...allRaw.filter(v => Number.isFinite(v)), 1);
+      const maxAdj = Math.max(...allAdj.filter(v => Number.isFinite(v)), 1);
+      const maxVal = Math.max(maxRaw, maxAdj, 1);
+
+      allRaw = allRaw.map(v => Number.isFinite(v) ? (v / maxVal) * 100 : v);
+      allAdj = allAdj.map(v => Number.isFinite(v) ? (v / maxVal) * 100 : v);
     }
 
     const years = [];
@@ -1510,35 +1558,32 @@ Last Updated: 04/08/2026
     }
 
     if (isTableView) {
-      // TABLE VIEW
       canvasElement.parentElement.style.display = "none";
       tableElement.style.display = "block";
-      
-      if (type === 'assets' && assetsChartInstance) { 
-        assetsChartInstance.destroy(); 
-        assetsChartInstance = null; 
+
+      if (type === "assets" && assetsChartInstance) {
+        assetsChartInstance.destroy();
+        assetsChartInstance = null;
       }
-      if (type === 'liabilities' && liabilitiesChartInstance) { 
-        liabilitiesChartInstance.destroy(); 
-        liabilitiesChartInstance = null; 
+      if (type === "liabilities" && liabilitiesChartInstance) {
+        liabilitiesChartInstance.destroy();
+        liabilitiesChartInstance = null;
       }
-      
+
       renderTable(label, years, rawVals, adjVals, tableElement);
-      
     } else {
-      // CHART VIEW
       tableElement.style.display = "none";
       canvasElement.parentElement.style.display = "block";
-      
-      if (type === 'assets' && assetsChartInstance) { 
-        assetsChartInstance.destroy(); 
-        assetsChartInstance = null; 
+
+      if (type === "assets" && assetsChartInstance) {
+        assetsChartInstance.destroy();
+        assetsChartInstance = null;
       }
-      if (type === 'liabilities' && liabilitiesChartInstance) { 
-        liabilitiesChartInstance.destroy(); 
-        liabilitiesChartInstance = null; 
+      if (type === "liabilities" && liabilitiesChartInstance) {
+        liabilitiesChartInstance.destroy();
+        liabilitiesChartInstance = null;
       }
-      
+
       requestAnimationFrame(() => {
         renderChart(label, years, rawVals, adjVals, canvasElement, type);
       });
@@ -1546,37 +1591,10 @@ Last Updated: 04/08/2026
   }
 
   function updateSingleTotalsChart(canvasElement, tableElement) {
-    const selectedRows = rawData.filter(
-      r => !excludedSeries.has(`left||${r.cols[0]}`)
-    );
-
     const allYears = csvHeaders.slice(1).map(Number);
 
-    let rawTotalSeries = allYears.map(() => 0);
-
-    selectedRows.forEach(row => {
-      const vals = row.cols.slice(1).map(v => parseFloat(v));
-      for (let i = 0; i < allYears.length; i++) {
-        const v = vals[i];
-        if (Number.isFinite(v)) rawTotalSeries[i] += v;
-      }
-    });
-
-    let adjustedTotalSeries = rawTotalSeries.slice();
-
-    selectedRows.forEach(row => {
-      const key = `left||${row.cols[0]}`;
-      if (!excludedSeries.has(key)) return;
-
-      const vals = row.cols.slice(1).map(v => parseFloat(v));
-      for (let i = 0; i < allYears.length; i++) {
-        const v = vals[i];
-        if (Number.isFinite(v)) adjustedTotalSeries[i] -= v;
-      }
-    });
-
-    rawTotalSeries = allYears.map(() => 0);
-    adjustedTotalSeries = allYears.map(() => 0);
+    // Raw = sum of all rows
+    const rawTotalSeries = allYears.map(() => 0);
 
     rawData.forEach(row => {
       const vals = row.cols.slice(1).map(v => parseFloat(v));
@@ -1586,7 +1604,13 @@ Last Updated: 04/08/2026
       }
     });
 
-    selectedRows.forEach(row => {
+    // Adjusted = sum of only selected rows
+    const adjustedTotalSeries = allYears.map(() => 0);
+
+    rawData.forEach(row => {
+      const key = `left||${row.cols[0]}`;
+      if (excludedSeries.has(key)) return;
+
       const vals = row.cols.slice(1).map(v => parseFloat(v));
       for (let i = 0; i < allYears.length; i++) {
         const v = vals[i];
@@ -1594,15 +1618,18 @@ Last Updated: 04/08/2026
       }
     });
 
+    let displayRaw = rawTotalSeries.slice();
+    let displayAdjusted = adjustedTotalSeries.slice();
+
     if (isNormalized) {
-      const finiteRaw = rawTotalSeries.filter(v => Number.isFinite(v));
-      const finiteAdj = adjustedTotalSeries.filter(v => Number.isFinite(v));
+      const finiteRaw = displayRaw.filter(v => Number.isFinite(v));
+      const finiteAdj = displayAdjusted.filter(v => Number.isFinite(v));
       const maxVal = Math.max(...finiteRaw, ...finiteAdj, 1);
 
-      rawTotalSeries = rawTotalSeries.map(v =>
+      displayRaw = displayRaw.map(v =>
         Number.isFinite(v) ? (v / maxVal) * 100 : v
       );
-      adjustedTotalSeries = adjustedTotalSeries.map(v =>
+      displayAdjusted = displayAdjusted.map(v =>
         Number.isFinite(v) ? (v / maxVal) * 100 : v
       );
     }
@@ -1623,7 +1650,7 @@ Last Updated: 04/08/2026
         assetsChartInstance = null;
       }
 
-      renderAnnualTableSingle(tableElement, allYears, rawTotalSeries, adjustedTotalSeries);
+      renderAnnualTableSingle(tableElement, allYears, displayRaw, displayAdjusted);
       return;
     }
 
@@ -1645,8 +1672,8 @@ Last Updated: 04/08/2026
     for (let i = 0; i < allYears.length; i++) {
       if (allYears[i] >= startYear && allYears[i] <= endYear) {
         years.push(allYears[i]);
-        filteredRaw.push(rawTotalSeries[i]);
-        filteredAdjusted.push(adjustedTotalSeries[i]);
+        filteredRaw.push(displayRaw[i]);
+        filteredAdjusted.push(displayAdjusted[i]);
       }
     }
 
@@ -1883,31 +1910,40 @@ function renderAnnualTableSingle(tableElement, allYears, rawSeries, adjustedSeri
 /*------------------------------------------------------------------------------------------------------------*/
 
 /* Average Table View */
-
 function renderAverageTable(tableElement) {
   const isLeft = (tableElement === tableViewLeft);
   const sideTable = isLeft ? leftTable : rightTable;
   const title = isLeft ? leftPanelTitle : rightPanelTitle;
+  const sectionName = isLeft ? "left" : "right";
 
-  const selectedVars = [];
+  const displayedVars = [];
   sideTable.querySelectorAll("li").forEach(li => {
     const rawKey = li.dataset.plotValue;
-    const exKey  = `${li.dataset.section}||${rawKey}`; 
+    const exKey  = `${li.dataset.section}||${rawKey}`;
     const code = li.dataset.varCode;
     const check = li.querySelector(".checkmark");
     if (!rawKey || !check) return;
 
+    // still skip parent rows in average table
     if (li.querySelector("ul")) return;
-    if (excludedSeries.has(exKey)) return;
 
-    selectedVars.push({ rawKey, code });
+    displayedVars.push({
+      rawKey,
+      code,
+      isExcluded: excludedSeries.has(exKey)
+    });
   });
 
-  // build table
   let html = `<h3 style="margin: 0; text-align:center;">${title}</h3>`;
   html += `<p style="text-align:center; margin:0.4rem 0; color:#666; font-size:0.9rem;">
     Average values over ${startYear}–${endYear}
   </p>`;
+
+  if (isNormalized) {
+    html += `<p style="text-align:center; margin:0.2rem 0 0.6rem; color:#666; font-size:0.9rem;">
+      Values normalized to 0–100 scale
+    </p>`;
+  }
 
   html += `<table>
     <thead>
@@ -1917,42 +1953,60 @@ function renderAverageTable(tableElement) {
         <th>${isNormalized ? "Normalized Adjusted" : "Adjusted"}</th>
       </tr>
     </thead>
-  `;
-
-  if (isNormalized) {
-    html += `<p style="text-align:center; margin:0.2rem 0 0.6rem; color:#666; font-size:0.9rem;">
-      Values normalized to 0–100 scale
-    </p>`;
-  }
+    <tbody>`;
 
   const allYears = csvHeaders.slice(1).map(Number);
 
-  selectedVars.forEach(item => {
-    const sectionName = isLeft ? "left" : "right";
+  displayedVars.forEach(item => {
+    let rawSeries = [];
+    let adjSeries = [];
 
-    const rawRow = rawData.find(
-      r => r.section === sectionName && r.cols[0] === item.rawKey
-    );
-    if (!rawRow) return;
+    if (currentDatasetMode === "split") {
+      const rawRow = rawData.find(
+        r => r.section === sectionName && r.cols[0] === item.rawKey
+      );
+      if (!rawRow) return;
 
-    let rawSeries = rawRow.cols.slice(1).map(x => parseFloat(x));
+      rawSeries = rawRow.cols.slice(1).map(v => parseFloat(v));
 
-    const adjRow = adjustedData.find(
-      r => r.section === sectionName && r.cols[0] === item.rawKey
-    );
-    let adjSeries = adjRow ? adjRow.cols.slice(1).map(Number) : rawSeries;
+      const matches = adjustedData.filter(
+        r => r.section === sectionName && r.cols[0] === item.rawKey
+      );
+      const adjRow = matches.length ? matches[matches.length - 1] : null;
 
-    // Apply normalization per-variable
-    if (isNormalized) {
-      const maxRaw = Math.max(...rawSeries.filter(n => Number.isFinite(n)));
-      const maxAdj = Math.max(...adjSeries.filter(n => Number.isFinite(n)));
-      const maxVal = Math.max(maxRaw, maxAdj, 1);
+      adjSeries = adjRow
+        ? adjRow.cols.slice(1).map(v => parseFloat(v))
+        : rawSeries.slice();
+    } else {
+      const rawRow = rawData.find(
+        r => r.section === sectionName && r.cols[0] === item.rawKey
+      );
+      if (!rawRow) return;
 
-      rawSeries = rawSeries.map(n => (Number.isFinite(n) ? (n / maxVal) * 100 : n));
-      adjSeries = adjSeries.map(n => (Number.isFinite(n) ? (n / maxVal) * 100 : n));
+      rawSeries = rawRow.cols.slice(1).map(v => parseFloat(v));
+
+      const adjRow = adjustedData.find(
+        r => r.section === sectionName && r.cols[0] === item.rawKey
+      );
+      adjSeries = adjRow
+        ? adjRow.cols.slice(1).map(v => parseFloat(v))
+        : rawSeries.slice();
     }
 
-    // Average over the chosen year range
+    // If excluded, show Adjusted as 0 instead of removing the row
+    if (item.isExcluded) {
+      adjSeries = adjSeries.map(() => 0);
+    }
+
+    if (isNormalized) {
+      const maxRaw = Math.max(...rawSeries.filter(n => Number.isFinite(n)), 1);
+      const maxAdj = Math.max(...adjSeries.filter(n => Number.isFinite(n)), 1);
+      const maxVal = Math.max(maxRaw, maxAdj, 1);
+
+      rawSeries = rawSeries.map(n => Number.isFinite(n) ? (n / maxVal) * 100 : n);
+      adjSeries = adjSeries.map(n => Number.isFinite(n) ? (n / maxVal) * 100 : n);
+    }
+
     let rawSum = 0, rawCnt = 0;
     let adjSum = 0, adjCnt = 0;
 
@@ -1970,13 +2024,10 @@ function renderAverageTable(tableElement) {
     const rawAvg = rawCnt ? (rawSum / rawCnt) : null;
     const adjAvg = adjCnt ? (adjSum / adjCnt) : null;
 
-    const rawCell = (rawAvg == null) ? "" : (isNormalized ? rawAvg.toFixed(2) : Math.round(rawAvg).toLocaleString());
-    const adjCell = (adjAvg == null) ? "" : (isNormalized ? adjAvg.toFixed(2) : Math.round(adjAvg).toLocaleString());
-
     html += `<tr>
       <td>${item.code || ""}</td>
-      <td>${rawCell}</td>
-      <td>${adjCell}</td>
+      <td>${rawAvg == null ? "" : (isNormalized ? rawAvg.toFixed(2) : Math.round(rawAvg).toLocaleString())}</td>
+      <td>${adjAvg == null ? "" : (isNormalized ? adjAvg.toFixed(2) : Math.round(adjAvg).toLocaleString())}</td>
     </tr>`;
   });
 
