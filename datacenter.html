@@ -149,54 +149,94 @@ Last Updated: 04/08/2026
 
   <!-- IRS Statistics of Income  -->
   <a href="https://www.irs.gov/statistics/soi-tax-stats-statistics-of-income" target="_blank">
-    <h3> IRS Statistics of Income (SOI) </h3>
+    <h3> IRS Business Balance Sheets </h3>
   </a>
 
-  <!-- All Corporations -->
-  <div class="irs-dataset-group" id="group-allcorp">
-    <button class="selection-entry irs-main active" id="allcorp"
-      onclick="selectIRSDataset('allcorp'); highlightDataset(this);">
+  <!-- Balance Sheet: All Corporations -->
+  <div class="irs-dataset-group" id="group-bs_allcorp">
+    <button class="selection-entry irs-main active" id="bs_allcorp"
+      onclick="selectIRSDataset('bs_allcorp'); highlightDataset(this);">
       <p>All Corporations</p>
     </button>
-    <div class="irs-view-toggle" id="toggle-allcorp">
-      <button class="irs-view-btn active" onclick="setIRSView('allcorp','pct')">% of GDP</button>
-      <button class="irs-view-btn" onclick="setIRSView('allcorp','raw')">Raw ($)</button>
+    <div class="irs-view-toggle" id="toggle-bs_allcorp">
+      <button class="irs-view-btn active" onclick="setIRSView('bs_allcorp','pct')">% of GDP</button>
+      <button class="irs-view-btn" onclick="setIRSView('bs_allcorp','raw')">Raw ($)</button>
     </div>
   </div>
 
-  <!-- S Corporations -->
-  <div class="irs-dataset-group" id="group-scorp">
-    <button class="selection-entry irs-main" id="scorp"
-      onclick="selectIRSDataset('scorp'); highlightDataset(this);">
+  <!-- Balance Sheet: S Corporations -->
+  <div class="irs-dataset-group" id="group-bs_scorp">
+    <button class="selection-entry irs-main" id="bs_scorp"
+      onclick="selectIRSDataset('bs_scorp'); highlightDataset(this);">
       <p>S Corporations</p>
     </button>
-    <div class="irs-view-toggle" id="toggle-scorp">
-      <button class="irs-view-btn active" onclick="setIRSView('scorp','pct')">% of GDP</button>
-      <button class="irs-view-btn" onclick="setIRSView('scorp','raw')">Raw ($)</button>
+    <div class="irs-view-toggle" id="toggle-bs_scorp">
+      <button class="irs-view-btn active" onclick="setIRSView('bs_scorp','pct')">% of GDP</button>
+      <button class="irs-view-btn" onclick="setIRSView('bs_scorp','raw')">Raw ($)</button>
     </div>
   </div>
 
-  <!-- Partnerships -->
-  <div class="irs-dataset-group" id="group-partners">
-    <button class="selection-entry irs-main" id="partners"
-      onclick="selectIRSDataset('partners'); highlightDataset(this);">
+  <!-- Balance Sheet: Partnerships -->
+  <div class="irs-dataset-group" id="group-bs_partners">
+    <button class="selection-entry irs-main" id="bs_partners"
+      onclick="selectIRSDataset('bs_partners'); highlightDataset(this);">
       <p>Partnerships</p>
     </button>
-    <div class="irs-view-toggle" id="toggle-partners">
-      <button class="irs-view-btn active" onclick="setIRSView('partners','pct')">% of GDP</button>
-      <button class="irs-view-btn" onclick="setIRSView('partners','raw')">Raw ($)</button>
+    <div class="irs-view-toggle" id="toggle-bs_partners">
+      <button class="irs-view-btn active" onclick="setIRSView('bs_partners','pct')">% of GDP</button>
+      <button class="irs-view-btn" onclick="setIRSView('bs_partners','raw')">Raw ($)</button>
     </div>
   </div>
 
-  <!-- Sole Proprietorships -->
-  <div class="irs-dataset-group" id="group-soleprop">
-    <button class="selection-entry irs-main" id="soleprop"
-      onclick="selectIRSDataset('soleprop'); highlightDataset(this);">
+  <a href="https://www.irs.gov/statistics/soi-tax-stats-statistics-of-income" target="_blank">
+    <h3> IRS Business Income Statements </h3>
+  </a>
+
+  <!-- Income Statement: All Corporations -->
+  <div class="irs-dataset-group" id="group-inc_allcorp">
+    <button class="selection-entry irs-main" id="inc_allcorp"
+      onclick="selectIRSDataset('inc_allcorp'); highlightDataset(this);">
+      <p>All Corporations</p>
+    </button>
+    <div class="irs-view-toggle" id="toggle-inc_allcorp">
+      <button class="irs-view-btn active" onclick="setIRSView('inc_allcorp','pct')">% of GDP</button>
+      <button class="irs-view-btn" onclick="setIRSView('inc_allcorp','raw')">Raw ($)</button>
+    </div>
+  </div>
+
+  <!-- Income Statement: S Corporations -->
+  <div class="irs-dataset-group" id="group-inc_scorp">
+    <button class="selection-entry irs-main" id="inc_scorp"
+      onclick="selectIRSDataset('inc_scorp'); highlightDataset(this);">
+      <p>S Corporations</p>
+    </button>
+    <div class="irs-view-toggle" id="toggle-inc_scorp">
+      <button class="irs-view-btn active" onclick="setIRSView('inc_scorp','pct')">% of GDP</button>
+      <button class="irs-view-btn" onclick="setIRSView('inc_scorp','raw')">Raw ($)</button>
+    </div>
+  </div>
+
+  <!-- Income Statement: Partnerships -->
+  <div class="irs-dataset-group" id="group-inc_partners">
+    <button class="selection-entry irs-main" id="inc_partners"
+      onclick="selectIRSDataset('inc_partners'); highlightDataset(this);">
+      <p>Partnerships</p>
+    </button>
+    <div class="irs-view-toggle" id="toggle-inc_partners">
+      <button class="irs-view-btn active" onclick="setIRSView('inc_partners','pct')">% of GDP</button>
+      <button class="irs-view-btn" onclick="setIRSView('inc_partners','raw')">Raw ($)</button>
+    </div>
+  </div>
+
+  <!-- Income Statement: Sole Proprietorships -->
+  <div class="irs-dataset-group" id="group-inc_soleprop">
+    <button class="selection-entry irs-main" id="inc_soleprop"
+      onclick="selectIRSDataset('inc_soleprop'); highlightDataset(this);">
       <p>Sole Proprietorships</p>
     </button>
-    <div class="irs-view-toggle" id="toggle-soleprop">
-      <button class="irs-view-btn active" onclick="setIRSView('soleprop','pct')">% of GDP</button>
-      <button class="irs-view-btn" onclick="setIRSView('soleprop','raw')">Raw ($)</button>
+    <div class="irs-view-toggle" id="toggle-inc_soleprop">
+      <button class="irs-view-btn active" onclick="setIRSView('inc_soleprop','pct')">% of GDP</button>
+      <button class="irs-view-btn" onclick="setIRSView('inc_soleprop','raw')">Raw ($)</button>
     </div>
   </div>
 
@@ -209,7 +249,7 @@ Last Updated: 04/08/2026
   </a>
 
   <button id="DomesticProductAndIncome" class="selection-entry" onclick=
-    "isPercentOfGDP=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('BEA – Gross Domestic Product and Income'); buildTables(
+    "isPercentOfGDP=false; isIRSRawBillions=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('BEA – Gross Domestic Product and Income'); buildTables(
       'GDPGDI',
       'Gross domestic product', 
       'Statistical discrepancy',
@@ -221,7 +261,7 @@ Last Updated: 04/08/2026
   <!-- Add new datasets here -->
 
   <button id="AdjustedAccounts" class="selection-entry" onclick=
-    "isPercentOfGDP=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('BEA – Adjusted Gross Domestic Product and Income'); buildTables(
+    "isPercentOfGDP=false; isIRSRawBillions=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('BEA – Adjusted Gross Domestic Product and Income'); buildTables(
       'adjustedgdpgdi',
       'Adjusted GDP', 
       '',
@@ -236,7 +276,7 @@ Last Updated: 04/08/2026
 
   <!-- Individual Totals -->
   <button id="individual_totals" class="selection-entry" onclick="
-    isPercentOfGDP=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Individual Totals'); buildSingleTotalsTable(
+    isPercentOfGDP=false; isIRSRawBillions=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Individual Totals'); buildSingleTotalsTable(
       'Individual_Totals',
       'Individual Totals',
       'Source description TBA.'
@@ -245,7 +285,7 @@ Last Updated: 04/08/2026
 
   <!-- Table 2 GDI Time Series -->
   <button id="table2_gdi" class="selection-entry" onclick="
-    isPercentOfGDP=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 2 – Adjusted GDI'); buildAdjustedSplitTable(
+    isPercentOfGDP=false; isIRSRawBillions=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 2 – Adjusted GDI'); buildAdjustedSplitTable(
       'table2_timeseries',
       'ADJUSTED GDI',
       'NIPA GDI',
@@ -255,7 +295,7 @@ Last Updated: 04/08/2026
 
   <!-- Table 2 GDP Time Series -->
   <button id="table2_gdp" class="selection-entry" onclick="
-    isPercentOfGDP=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 2 – Adjusted GDP'); buildAdjustedSplitTable(
+    isPercentOfGDP=false; isIRSRawBillions=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 2 – Adjusted GDP'); buildAdjustedSplitTable(
       'table2_timeseries',
       'ADJUSTED GDP',
       'NIPA GDP',
@@ -265,7 +305,7 @@ Last Updated: 04/08/2026
 
   <!-- Table 6 GDI Time Series -->
   <button id="table6_gdi" class="selection-entry" onclick="
-    isPercentOfGDP=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 6 – Adjusted GDI'); buildAdjustedSplitTable(
+    isPercentOfGDP=false; isIRSRawBillions=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 6 – Adjusted GDI'); buildAdjustedSplitTable(
       'table6_timeseries',
       'ADJUSTED GDI',
       'NIPA GDI',
@@ -275,7 +315,7 @@ Last Updated: 04/08/2026
 
   <!-- Table 6 GDP Time Series -->
   <button id="table6_gdp" class="selection-entry" onclick="
-    isPercentOfGDP=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 6 – Adjusted GDP'); buildAdjustedSplitTable(
+    isPercentOfGDP=false; isIRSRawBillions=false; currentIRSDataset=null; document.querySelectorAll('.irs-dataset-group').forEach(g=>g.classList.remove('open')); setDatasetTitle('Table 6 – Adjusted GDP'); buildAdjustedSplitTable(
       'table6_timeseries',
       'ADJUSTED GDP',
       'NIPA GDP',
@@ -391,7 +431,8 @@ Last Updated: 04/08/2026
   let legacyModeActive = false;
   let isSingleVisualizationMode = false;
   let isPercentOfGDP = false;   // true when viewing IRS data as % of GDP
-  let currentIRSDataset = "allcorp"; // which IRS dataset is active
+  let isIRSRawBillions = false; // true when viewing IRS raw files stored in billions of dollars
+  let currentIRSDataset = "bs_allcorp"; // which IRS dataset is active
   const datasetTitleEl = document.getElementById("dataset-title");
 
   function setDatasetTitle(text) {
@@ -458,21 +499,45 @@ Last Updated: 04/08/2026
   // Track current data source
   let curSource;
 
-  // IRS dataset config: raw file, raw panel rows; pct file, pct panel rows
+  // IRS dataset config: raw file, raw panel rows/labels; pct file, pct panel rows/labels
   const IRS_DATASETS = {
-    allcorp:  { raw: { file: 'allcorp',              left: 5, right: 32 },
-                pct: { file: 'transformed_allcorp',  left: 5, right: 32 } },
-    scorp:    { raw: { file: 'scorp',                left: 2, right: 25 },
-                pct: { file: 'transformed_scorp',    left: 2, right: 25 } },
-    partners: { raw: { file: 'partners',             left: 6, right: 29 },
-                pct: { file: 'transformed_partners', left: 6, right: 29 } },
-    soleprop: { raw: { file: 'soleprop',             left: 4, right: 7  },
-                pct: { file: 'transformed_soleprop', left: 2, right: 5  },
-                leftLabel: 'Business Receipts, Total',
-                rightLabel: 'Business Deductions, Total' },
+    // IRS Business Balance Sheets: Assets and Liabilities
+    bs_allcorp:  { sectionTitle: 'IRS Business Balance Sheets', displayName: 'All Corporations',
+                   raw: { file: 'billions_allcorp',     left: 5, right: 32 },
+                   pct: { file: 'transformed_allcorp',  left: 5, right: 32 } },
+    bs_scorp:    { sectionTitle: 'IRS Business Balance Sheets', displayName: 'S Corporations',
+                   raw: { file: 'billions_scorp',       left: 2, right: 25 },
+                   pct: { file: 'transformed_scorp',    left: 2, right: 25 } },
+    bs_partners: { sectionTitle: 'IRS Business Balance Sheets', displayName: 'Partnerships',
+                   raw: { file: 'billions_partners',    left: 6, right: 29 },
+                   pct: { file: 'transformed_partners', left: 6, right: 29 } },
+
+    // IRS Business Income Statements
+    // allcorp/scorp/partners use "Total receipts" and "Total deductions".
+    // soleprop is different and uses its own receipt/deduction row numbers.
+    inc_allcorp:  { sectionTitle: 'IRS Business Income Statements', displayName: 'All Corporations',
+                    raw: { file: 'billions_allcorp',     leftLabel: 'Total receipts', rightLabel: 'Total deductions' },
+                    pct: { file: 'transformed_allcorp',  leftLabel: 'Total receipts', rightLabel: 'Total deductions' },
+                    leftDisplay: 'Total Receipts', rightDisplay: 'Total Deductions' },
+    inc_scorp:    { sectionTitle: 'IRS Business Income Statements', displayName: 'S Corporations',
+                    raw: { file: 'billions_scorp',       leftLabel: 'Total receipts', rightLabel: 'Total deductions' },
+                    pct: { file: 'transformed_scorp',    leftLabel: 'Total receipts', rightLabel: 'Total deductions' },
+                    leftDisplay: 'Total Receipts', rightDisplay: 'Total Deductions' },
+    inc_partners: { sectionTitle: 'IRS Business Income Statements', displayName: 'Partnerships',
+                    raw: { file: 'billions_partners',    leftLabel: 'Total receipts', rightLabel: 'Total deductions' },
+                    pct: { file: 'transformed_partners', leftLabel: 'Total receipts', rightLabel: 'Total deductions' },
+                    leftDisplay: 'Total Receipts', rightDisplay: 'Total Deductions' },
+    inc_soleprop: { sectionTitle: 'IRS Business Income Statements', displayName: 'Sole Proprietorships',
+                    raw: { file: 'billions_soleprop',    left: 4, right: 7 },
+                    pct: { file: 'transformed_soleprop', left: 2, right: 5 },
+                    leftDisplay: 'Business Receipts, Total', rightDisplay: 'Business Deductions, Total' }
   };
+
   // Track per-dataset view mode so switching back remembers the mode
-  const irsViewModes = { allcorp: 'pct', scorp: 'pct', partners: 'pct', soleprop: 'pct' };
+  const irsViewModes = {
+    bs_allcorp: 'pct', bs_scorp: 'pct', bs_partners: 'pct',
+    inc_allcorp: 'pct', inc_scorp: 'pct', inc_partners: 'pct', inc_soleprop: 'pct'
+  };
 
   const IRS_SOURCE = '𝘚𝘵𝘢𝘵𝘪𝘴𝘵𝘪𝘤𝘴 𝘰𝘧 𝘐𝘯𝘤𝘰𝘮𝘦. Internal Revenue Sevice. Washington, D.C.';
 
@@ -483,7 +548,8 @@ Last Updated: 04/08/2026
   function selectIRSDataset(id) {
     // Close all groups, open the clicked one
     document.querySelectorAll('.irs-dataset-group').forEach(g => g.classList.remove('open'));
-    document.getElementById('group-' + id).classList.add('open');
+    const group = document.getElementById('group-' + id);
+    if (group) group.classList.add('open');
 
     currentIRSDataset = id;
     const mode = irsViewModes[id] || 'pct';
@@ -499,9 +565,11 @@ Last Updated: 04/08/2026
 
     // Update sub-button active states
     const toggleEl = document.getElementById('toggle-' + id);
-    toggleEl.querySelectorAll('.irs-view-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.textContent.trim() === (mode === 'pct' ? '% of GDP' : 'Raw ($)'));
-    });
+    if (toggleEl) {
+      toggleEl.querySelectorAll('.irs-view-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === (mode === 'pct' ? '% of GDP' : 'Raw ($)'));
+      });
+    }
 
     // If this dataset is already active, reload it
     if (currentIRSDataset === id) {
@@ -509,34 +577,71 @@ Last Updated: 04/08/2026
     }
   }
 
-  const IRS_DISPLAY_NAMES = {
-    allcorp:  'IRS All Corporations',
-    scorp:    'IRS S Corporations',
-    partners: 'IRS Partnerships',
-    soleprop: 'IRS Sole Proprietorships',
-  };
+  function cleanPanelName(name) {
+    return String(name || '')
+      .replace(/^Less:\s*/i, '')
+      .replace(/\s*\[.*?\]\s*$/g, '')
+      .trim()
+      .toLowerCase();
+  }
+
+  function findPanelRowByLabel(label) {
+    const needle = cleanPanelName(label);
+
+    // 1. Exact match after removing formula text.
+    let idx = rawData.findIndex(row => cleanPanelName(row.cols[0]) === needle);
+    if (idx >= 0) return idx + 1;
+
+    // 2. Starts-with match, useful for labels with extra spacing/punctuation.
+    idx = rawData.findIndex(row => cleanPanelName(row.cols[0]).startsWith(needle));
+    if (idx >= 0) return idx + 1;
+
+    // 3. Last fallback: contains match.
+    idx = rawData.findIndex(row => cleanPanelName(row.cols[0]).includes(needle));
+    return idx >= 0 ? idx + 1 : 0;
+  }
+
+  async function buildTablesFromPanelLabels(fname, leftLabel, rightLabel, source) {
+    await loadCSV(fname);
+
+    const leftIdx = findPanelRowByLabel(leftLabel);
+    const rightIdx = findPanelRowByLabel(rightLabel);
+
+    if (leftIdx <= 0 || rightIdx <= 0) {
+      console.error(`Could not find income statement rows in DATA/${fname}.csv`, { leftLabel, rightLabel, leftIdx, rightIdx });
+      alert(`Could not find rows "${leftLabel}" / "${rightLabel}" in DATA/${fname}.csv. Check the row labels in that CSV.`);
+      return;
+    }
+
+    await buildTables(fname, leftIdx, rightIdx, source);
+  }
 
   async function _loadIRSDataset(id, mode) {
     const ds = IRS_DATASETS[id];
     const cfg = ds[mode];
     isPercentOfGDP = (mode === 'pct');
+    isIRSRawBillions = (mode === 'raw');
     const modeLabel = mode === 'pct' ? 'Percent of GDP' : 'Raw';
-    setDatasetTitle(`${IRS_DISPLAY_NAMES[id]} – ${modeLabel}`);
-    await buildTables(cfg.file, cfg.left, cfg.right, IRS_SOURCE);
+    setDatasetTitle(`${ds.sectionTitle} – ${ds.displayName} – ${modeLabel}`);
 
-    // Apply display label overrides if defined (e.g. soleprop)
-    if (ds.leftLabel || ds.rightLabel) {
-      if (ds.leftLabel) {
-        leftPanelTitle = ds.leftLabel;
+    if (cfg.leftLabel || cfg.rightLabel) {
+      await buildTablesFromPanelLabels(cfg.file, cfg.leftLabel, cfg.rightLabel, IRS_SOURCE);
+    } else {
+      await buildTables(cfg.file, cfg.left, cfg.right, IRS_SOURCE);
+    }
+
+    // Apply display label overrides for income-statement datasets
+    if (ds.leftDisplay || ds.rightDisplay) {
+      if (ds.leftDisplay) {
+        leftPanelTitle = ds.leftDisplay;
         const h1 = leftTable.querySelector('h1');
-        if (h1) h1.textContent = ds.leftLabel;
+        if (h1) h1.textContent = ds.leftDisplay;
       }
-      if (ds.rightLabel) {
-        rightPanelTitle = ds.rightLabel;
+      if (ds.rightDisplay) {
+        rightPanelTitle = ds.rightDisplay;
         const h1 = rightTable.querySelector('h1');
-        if (h1) h1.textContent = ds.rightLabel;
+        if (h1) h1.textContent = ds.rightDisplay;
       }
-      // Re-render charts with updated titles
       updateChart();
     }
   }
@@ -2449,7 +2554,7 @@ Last Updated: 04/08/2026
             ...(singleMin !== undefined ? { min: singleMin - singlePadding, max: singleMax + singlePadding } : {}),
             title: {
               display: true,
-              text: isNormalized ? "Normalized Value (0-100)" : (isPercentOfGDP ? "% of GDP" : "Value (millions of dollars)")
+              text: isNormalized ? "Normalized Value (0-100)" : (isPercentOfGDP ? "% of GDP" : (isIRSRawBillions ? "Value (billions of dollars)" : "Value (millions of dollars)"))
             },
             ticks: {
               callback: function(v) {
@@ -2469,7 +2574,7 @@ Last Updated: 04/08/2026
     const yScaleOptions = {
       title: {
         display: true,
-        text: isNormalized ? 'Normalized Value (0-100)' : (isPercentOfGDP ? '% of GDP' : 'Value (millions of dollars)')
+        text: isNormalized ? 'Normalized Value (0-100)' : (isPercentOfGDP ? '% of GDP' : (isIRSRawBillions ? 'Value (billions of dollars)' : 'Value (millions of dollars)'))
       },
       ticks: {
         callback: function(v) {
@@ -2968,9 +3073,9 @@ function renderAverageTableSingle(tableElement) {
   // Build first table 
   window.addEventListener("resize", resetSlider);
   window.addEventListener("load", () => {
-    // Open the allcorp group and load default (pct of GDP)
-    document.getElementById('group-allcorp').classList.add('open');
-    _loadIRSDataset('allcorp', 'pct');
+    // Open the balance-sheet allcorp group and load default (pct of GDP)
+    document.getElementById('group-bs_allcorp').classList.add('open');
+    _loadIRSDataset('bs_allcorp', 'pct');
   });
 
   // Force charts to resize when window changes
