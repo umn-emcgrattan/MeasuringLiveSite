@@ -1,0 +1,15 @@
+Here is the minimal mapping you want your RAs to follow.
+
+\section{Title} → ## Title
+\subsection{Title} → ### Title
+inline math stays $...$
+displayed equations become $$ ... $$
+itemize becomes markdown bullets
+enumerate becomes numbered markdown lists
+drop LaTeX preamble material entirely
+drop page layout commands entirely
+avoid equation numbering unless really needed
+
+
+cd lectures/
+julia -e 'using Pluto; Pluto.run(auto_reload_from_file=true)'

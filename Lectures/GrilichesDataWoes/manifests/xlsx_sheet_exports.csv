@@ -1,0 +1,10 @@
+workbook,sheet,out_csv
+originals/KLEMS-Research-Tables-Underlying-Data-1947-2016.xlsx,notes,source_csv/historical_1947_2016/underlying_data/notes.csv
+originals/KLEMS-Research-Tables-Underlying-Data-1947-2016.xlsx,1947-1963,source_csv/historical_1947_2016/underlying_data/1947_1963.csv
+originals/KLEMS-Research-Tables-Underlying-Data-1947-2016.xlsx,1963-2016,source_csv/historical_1947_2016/underlying_data/1963_2016.csv
+originals/BEA-BLS-industry-level-production-account-1997-2024.xlsx,Value Added,source_csv/current_bea_bls_ilpa/value_added.csv
+originals/BEA-BLS-industry-level-production-account-1997-2024.xlsx,VA_Quantity,source_csv/current_bea_bls_ilpa/va_quantity.csv
+originals/BEA-BLS-industry-level-production-account-1997-2024.xlsx,Labor Hours_Quantity,source_csv/current_bea_bls_ilpa/labor_hours_quantity.csv
+originals/BEA-BLS-industry-level-production-account-1997-2024.xlsx,Integrated TFP Index,source_csv/current_bea_bls_ilpa/integrated_tfp_index.csv
+originals/BEA-BLS-industry-level-production-account-1997-2024.xlsx,Capital_R&D Compensation,source_csv/current_bea_bls_ilpa/capital_rd_compensation.csv
+originals/BEA-BLS-industry-level-production-account-1997-2024.xlsx,Gross Output,source_csv/current_bea_bls_ilpa/gross_output.csv

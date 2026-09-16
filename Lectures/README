@@ -1,0 +1,42 @@
+This directory contains lectures and accomanying materials for the Econometric
+Society Monograph to be published by Cambridge University Press:
+
+   Measuring Business Productivity and Value
+   by Ellen McGrattan
+
+The subdirectories are the individual lectures
+
+
+  ./GrilichesDataWoes
+
+  ./MacroDataTheory
+  ./ComputeGrowthModel
+  ./AnalyzeModelAccounts
+  ./BusinessCycleAccounting
+  ./MeasuringProductivityValue
+
+  ./AddIntellectualProperty
+  ./MacroDataTheoryWithIPP
+  ./ComputeModelWithIPP
+  ./AnalyzeModelWithIPP
+  ./MeasuringProductivityIPPValue
+
+  ./AddSweatEquity
+  ./MacroDataTheoryWithSweat
+  ./ComputeModelWithSweat
+  ./AnalyzeModelWithSwat
+  ./MeasuringProductivitySweatValue
+
+  ./Epilogue
+
+  ./Appendix
+
+
+Main punchlines for the Preface, Parts I-III, Epilogue
+   Preface:  Griliches data woes from large unresolved residual
+   Part I-III: 
+       -- Griliches was witnessing start of a puzzling tech boom
+       -- Needed to extend theory and data to resolve puzzles
+       -- Now private pass-through is the main unmeasured sector
+   Epilogue: Deja vu with AI
+  

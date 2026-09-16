@@ -1,0 +1,3 @@
+workbook,sheet,out_csv
+originals/hours-employment-detailed-industries.xlsx,MachineReadable,source_csv/bls_productivity/hours_employment_detailed_industries.csv
+originals/labor-productivity-detailed-industries.xlsx,MachineReadable,source_csv/bls_productivity/labor_productivity_detailed_industries.csv
