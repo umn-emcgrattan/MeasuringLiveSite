@@ -1,0 +1,285 @@
+<!--
+Created and maintained by student research assistants at the
+          HELLER-HURWICZ ECONOMICS INSTITUTE
+        University of Minnesota - Twin Cities
+
+Last Updated: 12/20/2025
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title> Measuring Business Productivity and Value </title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font-Family -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap">
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="lectures.css">
+  <!-- Icon -->
+  <link rel="icon" type="image/png" href="images/HHEI.png">
+</head>
+
+<!-------------------------------------------------------------------------------------------------------------------->
+
+<body>
+
+<!-- RIBBON -->
+<header>
+
+  <!-- Selection Toggle, Title, Author -->
+  <div id="header-left">
+
+    <!-- Lecture Selection Toggle -->
+    <button id="toggle-select"
+      class="pressable"
+      title="Toggle Lecture Selection Menu"
+      aria-label="Toggle Lecture Selection Menu" 
+      onclick="toggleSelection()">
+      ☰
+    </button>
+
+    <!-- GitHub Repository -->
+    <a href="https://github.com/mxiao0812/MeasuringLiveSite" target="_blank" title="Site Repository" class="pressable">
+      <img id="github-link"
+        alt="Site Repository" 
+        src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png">
+    </a>
+
+    <!-- Site Name & Author -->
+    <h1>
+      <a href="https://www.aeaweb.org/articles?id=10.1257/mac.2.4.88" target="_blank">
+        Measuring Business Productivity and Value
+      </a><br>
+      <a id="author" href="http://users.econ.umn.edu/~erm/" target="_blank">
+        Ellen McGrattan
+      </a>
+    </h1>
+    
+  </div>
+
+  <!-- Tab Navigation -->
+  <div id="tab-nav" role="tablist">
+    <button class="tab-btn active" role="tab" aria-selected="true"> Lectures </button>
+    <button 
+      class="tab-btn pressable"
+      onclick="location.href='datacenter.html';"
+      role="tab"
+      aria-selected="false">
+      Data Center
+    </button>
+  </div>
+
+  <!-- HHEI Web Link -->
+  <div id="hhei-link">
+    <a href="https://cla.umn.edu/heller-hurwicz" target="_blank" class="pressable">
+      <img 
+      src="https://cla.umn.edu/sites/cla.umn.edu/files/HHEI%20wordmark.png"
+      alt="Heller-Hurwicz Economics Institute" 
+      id="hhei-logo">
+    </a>
+  </div>
+
+</header>
+
+<!-------------------------------------------------------------------------------------------------------------------->
+  
+<!-- LECTURE SELECTION -->
+<div id="selection" class="hidden">
+
+  <h2> Contents </h2>
+
+  <button id="introduction" class="selection-entry active">
+    <p> Introduction </p>
+  </button>
+  <button id="neoclassical" class="selection-entry">
+    <p> The Basic Neoclassical Growth Model </p>
+  </button>
+  <button id="nonneutralTFP" class="selection-entry">
+    <p> Modeling Non-Neutral TFP </p>
+  </button>
+  <button id="evidenceIntangible" class="selection-entry">
+    <p> Evidence of Increased Intangible Investment </p>
+  </button>
+  <button id="intangible" class="selection-entry">
+    <p> Extended Theory With Intangible Investment </p>
+  </button>
+  <button id="aecasestudy" class="selection-entry">
+    <p> Acclaim Entertainment Case Study </p>
+  </button>
+
+  <!-- NEW LECTURE WITH CUSTOM PATH -->
+  <button id="GDW" class="selection-entry" data-path="Lectures/GrilichesDataWoes/GDW.html">
+    <p> Griliches Data Woes </p>
+  </button>
+        
+  <!-- Add new lectures here -->
+
+</div>
+
+<!-------------------------------------------------------------------------------------------------------------------->
+
+<!-- MAIN CONTENTS -->
+
+<!-- Data Download -->
+<a
+  id="data-download"
+  href="https://github.com/mxiao0812/MeasurementData/archive/refs/heads/main.zip"
+  target="_blank">
+  Download Data ⤓
+</a>
+  
+<!-- Lecture -->
+<iframe 
+  id="lecture"
+  src="notebooks/introduction.html"
+  title="Lecture"
+  frameborder="0">
+</iframe>
+  
+<!-- Lecture Navigation -->
+<button
+  id="prev-btn"
+  class="nav-btn pressable"
+  title="Previous Lecture"
+  aria-label="Previous Lecture"
+  onclick="changeLecture(curIdx-1)"
+  style="display: none;">
+</button>
+<button
+  id="next-btn"
+  class="nav-btn pressable"
+  title="Next Lecture"
+  aria-label="Next Lecture"
+  onclick="changeLecture(curIdx+1)"
+  style="display: block;">
+  The Basic Neoclassical Growth Model ▶
+</button>
+
+<!-------------------------------------------------------------------------------------------------------------------->
+
+<script>
+
+  /* HTML ELEMENTS */
+
+  /* RIBBON */
+
+  /* Lecture Selection Toggle */
+  const selectionToggle = document.getElementById('toggle-select');
+
+  /* LECTURE SELECTION */
+  const selection = document.getElementById('selection');
+  const selectionEntries = selection.querySelectorAll('.selection-entry');
+  
+  // Extract name, title, and dynamically handle custom data-path attributes
+  const lectures = Array.from(selectionEntries).map(item => ({
+      name: item.id,
+      title: item.querySelector('p').textContent.trim(),
+      path: item.dataset.path || `notebooks/${item.id}.html`
+  }));
+  const lectureButtons = lectures.map(l => document.getElementById(l.name));
+
+  const navButtons = document.getElementById('nav-button-container');
+
+  /* MAIN CONTENTS */
+  const lecture = document.getElementById('lecture'); // Lecture iframe
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+
+/*********************************************************************************************************************/
+
+  /* LECTURE SELECTION */
+  
+  /* Construct table of contents */
+  selectionEntries.forEach((item, index) => {
+    item.querySelector('p').textContent = `${index + 1}. ${lectures[index].title}`; // Number entries in TOC
+    item.addEventListener('click', () => {
+        changeLecture(index); // Change to selected lecture
+        toggleSelection();    // Close table of contents
+    });
+  });
+
+  
+  let isHidden = true;
+
+  /**
+   * Opens/closes lecture selection menu.
+  */
+  function toggleSelection() {
+      // Show selection, hide previous/next buttons, and blur tab contents when selection open
+      selection.classList.toggle('hidden'); // Show lecture selection menu
+      lecture.classList.toggle('blurred'); // Blur lecture contents
+
+      // Update toggle button
+      isHidden = !isHidden;
+      selectionToggle.textContent = isHidden ? "☰" : "X";
+  }
+
+/*********************************************************************************************************************/
+
+  /* MAIN CONTENTS */
+
+  /* Lecture Navigation */
+
+  let curIdx = 0;
+  let numLectures = lectures.length;
+
+  /**
+   * Changes lecture iframe contents to the lecture in lectures at index newIdx
+  */
+  function changeLecture(newIdx) {
+
+    // Bold selected lecture entry
+    lectureButtons[curIdx].classList.remove("active");
+    lectureButtons[newIdx].classList.add("active");
+
+    // Update lecture navigation buttons
+    if (newIdx === 0) {
+        prevBtn.style.display = "none";
+    } else if (newIdx === numLectures - 1) {
+        nextBtn.style.display = "none";  
+    } else {
+        prevBtn.style.display = "block";
+        nextBtn.style.display = "block";
+    }
+    if (newIdx > 0) { prevBtn.textContent = "◀ " + lectures[newIdx-1].title; }
+    if (newIdx < numLectures - 1) { nextBtn.textContent = lectures[newIdx+1].title + " ▶"; }
+
+    // Fade in selected lecture using the exact custom or default path
+    lecture.classList.add("fade");
+    setTimeout(() => {
+      lecture.src = lectures[newIdx].path;
+    }, 300);
+    
+    // Ensure fade removal handler fires properly
+    const removeFade = () => {
+      lecture.classList.remove("fade");
+      lecture.removeEventListener("load", removeFade);
+    };
+    lecture.addEventListener("load", removeFade);
+
+    curIdx = newIdx; // Update index globally
+      
+  }
+
+/*********************************************************************************************************************/
+
+  /* MISCELLANEOUS */
+
+  // Change lecture via arrow keys
+  document.addEventListener("keydown", function(event) {
+    // Left arrow: previous lecture
+    if (event.key === "ArrowLeft" && curIdx > 0) {
+        changeLecture(curIdx - 1);
+    } 
+    // Right arrow: next lecture
+    else if (event.key === "ArrowRight" && curIdx < (numLectures - 1)) {
+        changeLecture(curIdx + 1);
+    }
+  });
+  
+</script>
+</body>
+</html>
