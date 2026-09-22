@@ -93,28 +93,28 @@ Last Updated: 12/20/2025
   <button id="introduction" class="selection-entry active" data-path="Lectures/Preface/introduction.html">
     <p> Introduction </p>
   </button>
-  <button id="neoclassical" class="selection-entry">
+  <button id="neoclassical" class="selection-entry" data-path="Lectures/Neoclassical/neoclassical.html">
     <p> The Basic Neoclassical Growth Model </p>
   </button>
-  <button id="nonneutralTFP" class="selection-entry">
+  <button id="nonneutralTFP" class="selection-entry" data-path="Lectures/NonneutralTFP/nonneutralTFP.html">
     <p> Modeling Non-Neutral TFP </p>
   </button>
-  <button id="evidenceIntangible" class="selection-entry">
+  <button id="evidenceIntangible" class="selection-entry" data-path="Lectures/EvidenceIntangible/evidenceIntangible.html">
     <p> Evidence of Increased Intangible Investment </p>
   </button>
-  <button id="intangible" class="selection-entry">
+  <button id="intangible" class="selection-entry" data-path="Lectures/Intangible/intangible.html">
     <p> Extended Theory With Intangible Investment </p>
   </button>
-  <button id="aecasestudy" class="selection-entry">
+  <button id="aecasestudy" class="selection-entry" data-path="Lectures/AECaseStudy/aecasestudy.html">
     <p> Acclaim Entertainment Case Study </p>
   </button>
-  <button id="/CGM" class="selection-entry" data-path="Lectures/ComputeGrowthModel/CGM.html">
+  <button id="CGM" class="selection-entry" data-path="Lectures/ComputeGrowthModel/CGM.html">
     <p>Compute Growth Model</p>
   </button>
-  <button id="/MDT" class="selection-entry" data-path="Lectures/MacroDataTheory/MDT.html">
+  <button id="MDT" class="selection-entry" data-path="Lectures/MacroDataTheory/MDT.html">
     <p>Macro Data Theory</p>
   </button>
-  <button id="/GDW" class="selection-entry" data-path="Lectures/GrilichesDataWoes/GDW.html">
+  <button id="GDW" class="selection-entry" data-path="Lectures/GrilichesDataWoes/GDW.html">
     <p>Griliches Data Woes</p>
   </button>
 </div>
@@ -134,7 +134,7 @@ Last Updated: 12/20/2025
 <!-- Lecture -->
 <iframe 
   id="lecture"
-  src="notebooks/introduction.html"
+  src="Lectures/Preface/introduction.html"
   title="Lecture"
   frameborder="0">
 </iframe>
@@ -174,7 +174,8 @@ Last Updated: 12/20/2025
   const selectionEntries = selection.querySelectorAll('.selection-entry');
   const lectures = Array.from(selectionEntries).map(item => ({
       name: item.id,
-      title: item.textContent
+      title: item.querySelector('p').textContent.trim(),
+      path: item.getAttribute('data-path')
   }));
   const lectureButtons = lectures.map(l => document.getElementById(l.name));
 
@@ -192,7 +193,7 @@ Last Updated: 12/20/2025
   
   /* Construct table of contents */
   selectionEntries.forEach((item, index) => {
-    item.querySelector('p').textContent = `${index + 1}. ${item.textContent}` // Number entries
+    item.querySelector('p').textContent = `${index + 1}. ${item.querySelector('p').textContent.trim()}` // Number entries
     item.addEventListener('click', () => {
         changeLecture(index); // Change to selected lecture
         toggleSelection();    // Close table of contents
@@ -248,7 +249,7 @@ Last Updated: 12/20/2025
     // Fade in selected lecture
     lecture.classList.add("fade");
     setTimeout(() => {
-      lecture.src = "notebooks/" + lectures[newIdx].name + ".html";
+      lecture.src = lectures[newIdx].path;
     }, 300);
     lecture.addEventListener("load", () => { lecture.classList.remove("fade"); });
 
