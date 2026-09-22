@@ -21,10 +21,10 @@ using DelimitedFiles, Plots, PlutoUI, HypertextLiteral
 
 # ╔═╡ 7996ce3f-a2d1-4aed-9bad-fad683ae7c01
 begin
-	include("scripts/griliches_historical_productivity.jl")
-	include("scripts/griliches_klems_sector_compare.jl")
-	include("scripts/griliches_fixed_assets_ipp_compare.jl")
-	nothing
+    include(joinpath(@__DIR__, "scripts", "griliches_historical_productivity.jl"))
+    include(joinpath(@__DIR__, "scripts", "griliches_klems_sector_compare.jl"))
+    include(joinpath(@__DIR__, "scripts", "griliches_fixed_assets_ipp_compare.jl"))
+    nothing
 end
 
 # ╔═╡ 66666666-6666-4666-8666-666666666666
