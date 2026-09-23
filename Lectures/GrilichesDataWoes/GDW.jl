@@ -1,6 +1,15 @@
 ### A Pluto.jl notebook ###
 # v0.20.21
 
+begin
+    # Force working directory to match this notebook's folder
+    cd(@__DIR__)
+    
+    # Load your helper scripts or data files
+    include("scripts/your_helper_script.jl")
+    # data = CSV.read("csv/your_data.csv", DataFrame)
+end
+
 using Markdown
 using InteractiveUtils
 
