@@ -1,0 +1,30 @@
+begin
+    include("scripts/quadrature_visualization.jl")
+    nothing
+end
+
+
+begin
+    node_selector = @bind quadrature_n Select(
+        1:20;
+        default = 2,
+    )
+
+    @htl("""
+    <div style="text-align:center; margin-bottom:.0em;">
+        <div style="font-size:1.2em; font-weight:bold;">
+            Riemann Sum versus Gaussian Quadrature
+        </div>
+        <div style="margin-top:0.5em;">
+            Number of function evaluations: $(node_selector)
+        </div>
+    </div>
+    """)
+end
+
+
+begin
+    quadrature_comparison_plot(
+        n = quadrature_n,
+    )
+end

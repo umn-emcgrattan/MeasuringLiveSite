@@ -231,29 +231,31 @@ and the derivative $f^{(2n)}$.
 
 
 # ╔═╡ 9cc36982-4d4f-4446-a7b7-8904e4daea7e
-
 begin
-    node_selector = @bind quadrature_n Select(
+    node_selector = @bind quadrature_n Slider(
         1:20;
         default = 2,
+        show_value = true, 
     )
-
+        
     @htl("""
     <div style="text-align:center; margin-bottom:.0em;">
         <div style="font-size:1.2em; font-weight:bold;">
-            Riemann Sum versus Gaussian Quadrature
+            Reimann Sum versus Gaussian Quadrature
         </div>
         <div style="margin-top:0.5em;">
-            Number of function evaluations: $(node_selector)
+            Number of function evaluations: $(delta_selector)
         </div>
     </div>
     """)
+
 end
+
 
 
 # ╔═╡ 629d7424-efa6-4bbd-a18f-3ecf3320283a
 begin
-  quadrature_comparison_plot(n=quadrature_n)
+  forward_difference_plot(delta=forward_delta,x0=1.0)
 end 
 
 
@@ -342,25 +344,13 @@ Because of symmetry, we have $P_{31}=P_{13},$ $P_{32}=P_{23},$ and $P_{33}=P_{11
 
 
 # ╔═╡ 9dd36982-4d4f-4446-a7b7-8904e4daea7e
-
 begin
-    state_selector = @bind ar_state Select(
-        1:3;
-        default = 2,
-    )
-
-    rho_selector = @bind ar_rho Slider(
-        0.0:0.05:0.95;
-        default = 0.8,
-        show_value = true,
-    )
-
     sigma_selector = @bind ar_sigma Slider(
         0.1:0.05:1.0;
         default = 0.4,
-        show_value = true,
+        show_value = true, 
     )
-
+        
     @htl("""
     <div style="text-align:center; margin-bottom:.0em;">
         <div style="font-size:1.2em; font-weight:bold;">
@@ -371,16 +361,16 @@ begin
             <div>
                 Today's state: $(state_selector)
                 <br>
-                <span style="font-size:.85em;">
-                    1 = −a, 2 = 0, 3 = a
-                </span>
+                <span style="font-size:.85em;">1 = −a, 2 = 0, 3 = a</span>
             </div>
             <div>Persistence ρ: $(rho_selector)</div>
             <div>Innovation standard deviation: $(sigma_selector)</div>
         </div>
     </div>
     """)
+
 end
+
 
 
 # ╔═╡ 640d7424-efa6-4bbd-a18f-3ecf3320283a
@@ -392,27 +382,19 @@ end
 
 # ╔═╡ a61ff7cf-49f0-4a45-88a4-9f4cab7da31d
 md"""
-## Root-Finding Methods
+## Bisection Method
 
-Two standard methods will be applied: the bisection method and
-the Newton method (sometimes called Newton-Raphson). Both work
-well for one-dimensional problems, but Newton is the go-to
-method for larger systems, especially if the user has a good
-first guess.
-
-### Bisection Method
-
-The bisection method is a very robust method to solve the
-root-finding problem $f(x)=0$  in 
-cases where $x$ and $f(x)$ are both scalars and $f$ is continuous
+The bisection method is a very robust method to solve a
+fixed point problem $f(x)=0$  in 
+cases where $x$ and $f(x)$ are scalars and $f$ is continuous
 on the interval $[a,b]$.  If $f(a)$ and $f(b)$ have opposite
 signs and $f$ is continuous, then there must be at least
-one root. Let $c=(a+b)/2$ be the midpoint of the interval.
+one fixed point. Let $c=(a+b)/2$ be the midpoint of the interval.
 If $f(a)$ and $f(c)$ are of opposite signs, then we know
-that the new smaller interval $[a,c]$ must contain a root
-of $f$---and we continue bisecting.  If $f(a)$ and $f(c)
+that the new smaller interval $[a,c]$ must contain a fixed
+point of $f$---and we continue bisecting.  If $f(a)$ and $f(c)
 are the same signs, then we know to continue our search 
-in $[c,b]$ and thus continue bisecting there. We repeat 
+in $[c,b]$ and continue bisecting there. We repeat 
 this until the value of $f$ is within a pre-specified
 distance of 0 or the interval length is below a pre-specified
 threshold.
@@ -431,17 +413,17 @@ Since this is the crossing point, we can stop.
 
 # ╔═╡ b61ff7cf-49f0-4a45-88a4-9f4cab7da31d
 md"""
-### Newton-Raphson Method
+## Newton-Raphson Method
 
-Another popular method to find the root of
+Another popular method to find the fixed point of
 $f(x)=0$ is the Newton-Raphson method.
 This method can be applied to the scalar problem
 or to systems of equations where $x$ and $f$ are
-vectors of length $n$. We require $f$ to be 
-continuously differentiable and
-the Jacobian matrix (with $(i,j)$ elements given by 
-$\partial f_i(x)/\partial x_j$)
-to be nonsingular at each step of the algorithm.
+vectors of length $n$. As with the bisection method,
+we require continuity of $f$ and existence of 
+derivatives $\partial f_i(x)/\partial x_j$
+for all $i,j=1,\ldots, n$ that exist and are 
+continuous.  
 
 The idea of the method is obvious if you
 take a first-order Taylor expansion of $f$ around an
@@ -454,7 +436,7 @@ $$\begin{equation}
 where the $(i,j)$ element of  $Df(x)$ 
 is $\partial f_i(x)/\partial x_j$. If $x_0$ is
 a good guess then we can use the linear approximation of $f$ 
-on the right hand side of (taylor) to find the root rather
+on the right hand side of (taylor) to find the fixed point rather
 than working directly with $f$. In other words,
 find $x$ that sets the linear approximation to 0:
 
@@ -480,58 +462,22 @@ studied above. If we start with $x_0=3$ the next guess
 is $x_1=3-f(3)/f'(3)$ or  2.2. If we keep going,
 we have $x_2=2.01176471$, $x_3=2.00004578$, $x_4=2.0000000007$.
 
-For the example that I set up, it might appear that 
-Newton-Raphson is much slower than the bisection method
-given it took four iterations when bisection took only two.  
-This example
-is somewhat misleading because I happened to choose the
-interval just right to get two steps (and avoid boring the
-reader!).  In the figure below, we can vary the interval for
-the bisection method and the initial point $x_0$ for the
-Newton-Raphson method to make several points. First, the
-bisection method will typically require more steps than
-Newton-Raphson for the same solution accuracy. Second, for
-one-dimensional problems, the bisection method is more reliable
-than Newton-Raphson as long as we know that $f(a)$ and $f(b)$
-have different signs.  To see this, try moving the initial
-$x_0$ below 0. Newton-Raphson will typically convert to the
-other root: $-1$, whereas bisection method converges to a
-root selected by its sequence of sign-changing brackets.
-Also, try moving $x_0$ close to 1/2 where $f'(x_0)$ is close to
-zero. The Newton step size then becomes extremely large and
-at 1/2 exactly it is undefined.
 
 """
 
 
 # ╔═╡ 9ee36982-4d4f-4446-a7b7-8904e4daea7e
-
 begin
-    a_selector = @bind bisection_a Slider(
-        -2.5:0.1:1.5;
-        default = 0.0,
+    bisection_iteration_selector = @bind bisection_iteration Slider(
+        1:2;
+        default = 1,
         show_value = true,
     )
 
-    b_selector = @bind bisection_b Slider(
-        -0.5:0.1:5.0;
-        default = 5.0,
+    newton_iteration_selector = @bind newton_iteration Slider(
+        1:4;
+        default = 1,
         show_value = true,
-    )
-
-    bisection_iteration_selector = @bind bisection_iteration Select(
-        1:30;
-        default = 1,
-    )
-
-    x0_selector = @bind newton_x0 NumberField(
-        -2.5:0.01:4.5;
-        default = 3.0,
-    )
-
-    newton_iteration_selector = @bind newton_iteration Select(
-        1:10;
-        default = 1,
     )
 
     @htl("""
@@ -539,38 +485,22 @@ begin
         <div style="font-size:1.2em; font-weight:bold;">
             Bisection and Newton-Raphson Methods
         </div>
-        <div style="font-size:.9em; margin-top:3px;">
-            Fixed convergence tolerance: 10⁻⁸
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr;
-                    gap:30px; max-width:1050px; margin:12px auto 0 auto;">
-            <div style="border:1px solid #ddd; padding:10px; border-radius:6px;">
-                <div style="font-weight:bold; margin-bottom:7px;">Bisection</div>
-                <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
-                    <div>Lower endpoint a: $(a_selector)</div>
-                    <div>Upper endpoint b: $(b_selector)</div>
-                    <div>Iteration: $(bisection_iteration_selector)</div>
-                </div>
-            </div>
-            <div style="border:1px solid #ddd; padding:10px; border-radius:6px;">
-                <div style="font-weight:bold; margin-bottom:7px;">Newton-Raphson</div>
-                <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
-                    <div>Initial guess x₀: $(x0_selector)</div>
-                    <div>Iteration: $(newton_iteration_selector)</div>
-                </div>
-            </div>
+        <div style="display:flex; gap:32px; justify-content:center;
+                    align-items:center; margin-top:0.5em; flex-wrap:wrap;">
+            <div>Bisection iteration: $(bisection_iteration_selector)</div>
+            <div>Newton iteration: $(newton_iteration_selector)</div>
         </div>
     </div>
     """)
 end
 
-# ╔═╡ 650d7424-efa6-4bbd-a18f-3ecf3320283a
 
+# ╔═╡ 650d7424-efa6-4bbd-a18f-3ecf3320283a
 begin
-    root_finding_comparison_plot(a = bisection_a,b = bisection_b,x0 = newton_x0,
-        bisection_iteration = bisection_iteration,newton_iteration = newton_iteration,
-        tolerance = 1e-8)
+    root_finding_comparison_plot(bisection_iteration = bisection_iteration,
+                                 newton_iteration = newton_iteration)
 end
+
 
 
 
@@ -706,7 +636,35 @@ $$\begin{align}
 This essentially tells us that the optimal rule is
 to consume and save constant fractions of output.
 
-In this example, we were 
+What if $A$ is stochastic? 
+In this case, we need to modify the
+dynamic programming problem because the value is now the 
+expected present value of returns:
+
+$$\begin{align}
+  V(x_0) &= \max_{\{u_t\}}  E\left[\sum_{t=0}^\infty \beta^t r(x_t,u_t) | x_0]
+         & \text{subject\ to\ } x_{t+1} = g(x_t,u_t,\epsilon_{t+1}),
+\end{equation}$$
+
+where $\epsilon_t$ is a sequence of iid random variables with cumulative
+distribution function $F(\epsilon)$.
+In this case we write the Bellman equation as 
+
+$$\begin{align}
+  V(x) &= \max_{u} \{ r(x,u) + \beta E[V(g(x,u,\epsilon))|x] \} \\
+       &= \max_{u} \{ r(x,u) + \beta \int V(g(x,u,\epsilon))dF(\epsilon) \}.
+\end{align}$$
+
+Suppose $\log A'=\rho\log A + \epsilon'$ in the consumption-savings
+problem above. For this specification, we have the
+state vector $x=[k,A]$ (or possibly $x=[\log k,\log A]$ if
+we want to work with logged variables). The continuation value
+is now $E[V(k',A')|A]$. It turns out that the optimal
+solution in this case is as before: save and consume constant
+fractions of output and therefore $k'=\beta\theta A k^\theta$,
+except that now $A$ fluctuates over time. 
+
+In both the deterministic and stochastic examples, we were
 able to update our guesses analytically given the tractability 
 of the problem.  This will not be possible in general, and
 we will confront an obvious practical issue: how to set
@@ -714,7 +672,7 @@ the domain for the state variables. One way to do it is
 to compute steady state values and use them to normalize 
 the state variables. 
 
-Let's redo the example to see how this works.
+Let's go back to the simple deterministic growth model to see how this works. 
 We can figure out the steady state
 capital stock---which is the value that the economy will tend
 to over time---by deriving the first order condition:
@@ -778,12 +736,9 @@ $$\begin{align}
 which can be stacked into a system of nonlinear equations and
 solved using the Newton method discussed earlier.
 
+
+
 """
-
-
-
-
-
 
 
 
@@ -838,92 +793,9 @@ begin
         theta = growth_theta,grid_width = growth_grid_width,grid_points = 11)
 end
 
-# ╔═╡ 44433333-3333-5333-8333-333333333333
-md"""
-### Adding Stochastic Shocks
-
-What if total factor productivity in the growth model is stochastic? 
-In this case, we need to modify the
-dynamic programming problem because the value is now the 
-expected present value of returns:
-
-$$\begin{align}
-  V(x_0) &= \max_{\{u_t\}}  E\left[\sum_{t=0}^\infty \beta^t r(x_t,u_t) | x_0]
-         & \text{subject\ to\ } x_{t+1} = g(x_t,u_t,\epsilon_{t+1}),
-\end{equation}$$
-
-where $\epsilon_t$ is a sequence of iid random variables with cumulative
-distribution function $F(\epsilon)$.
-In this case we write the Bellman equation as 
-
-$$\begin{align}
-  V(x) &= \max_{u} \{ r(x,u) + \beta E[V(g(x,u,\epsilon))|x] \} \\
-       &= \max_{u} \{ r(x,u) + \beta \int V(g(x,u,\epsilon))dF(\epsilon) \}.
-\end{align}$$
-
-Suppose $\log A'=\rho\log A + \epsilon'$ in the consumption-savings
-problem above. For this specification, we have the
-state vector $x=[k,A]$ (or possibly $x=[\log k,\log A]$ if
-we want to work with logged variables). The continuation value
-is now $E[V(k',A')|A]$. It turns out that the optimal
-solution in this case is as before: save and consume constant
-fractions of output and therefore $k'=\beta\theta A k^\theta$,
-except that now $A$ fluctuates over time. 
-
-"""
 
 
 
-# ╔═╡ 55533333-3333-5333-8333-333333333333
-md"""
-### Adding Aggregate States
-
-In most macroeconomic problems, there are prices taken as 
-given by economic agents. These prices can be formulated
-as functions of the aggregate states and computed
-in a general equilibrium
-by imposing market clearing conditions (that is, supplies
-of goods, assets, labor equal the demands of goods, assets,
-labor).  The aggregate states
-are typically endogenous variables themselves---and oftentimes
-weighted sums or integrals of the individual states and decisions that we
-interested in computing.  In other words, the aggregate amounts that 
-are sums of the individual amounts have a law of motion
-that we do not know in advance. 
-
-Let's rewrite the general problem but separately include
-the individual states $x$ and the aggregate states $X$:
-
-$$\begin{align}
-  V(x_0,X_0) = \max_{\{u_t\}}  \ &\sum_{t=0}^\infty \beta^t r(x_t,X_t,u_t)\\
-             \text{subject\ to}\ &x_{t+1} = g(x_t,X_t,u_t)\\
-                                 &X_{t+1} = G(X_t)\\
-                                 &x_0,X_0 \ given.
-\end{align}$$
-
-To simplify matters, we can abstract from aggregate shocks
-but it is easy to include them as we did above.
-
-We can write this recursively as before:
-
-$$\begin{equation}
-  V(x,X) = \max_{u} \{ r(x,X,u) + \beta V(x',G^0(X))\} \ \ subject to\ x'=g(x,X,u) \tag{addG}
-\end{equation}$$
-
-for an initial guess of the aggregate function, that is, $G^0(X)$. 
-Holding this fixed and repeating what we do above yields a solution
-that is conditional on the guess for aggregate evolution:  
-$u^*=h(x,X;G^0)$ and $x'=g(x,X,h(x,X;G^0))$.
-
-To make this work, we need to specify market clearing conditions
-that provide sufficient structure to give us an updated guess
-$G^1(X)$. 
-For example, suppose that we have an aggregate per capita $K$ equals 
-individual per capita $k$ in equilibrium and thus $X=x$.
-Then our next guess is $X'=G^1(X)=g(X,X,h(X,X;G^0)$.
-
-
-"""
 
 
 # ╔═╡ c61ff7cf-49f0-4a45-88a4-9f4cab7da31d
@@ -934,15 +806,15 @@ Consider the following maximization problem with quadratic
 objective and linear constraints:
 
 $$\begin{align}
-    \max_{\{u_t\}_{t=0}^{\infty}}\ &\sum_{t=0}^{\infty} 
+    \max_{\{u_t\}_{t=0}^{\infty}}{\rm E}_0 &\sum_{t=0}^{\infty} 
            \beta^t (X_t'Q X_t+u_t'R u_t +2 X_t' W u_t)\\
-   {\rm subject\ to\ \ \ } & X_{t+1}=A X_t+B u_t}\\
+   {\rm subject\ to\ \ \ } & X_{t+1}=A X_t+B u_t+C\epsilon_{t+1}\\
                            & X_0\ {\rm given}\tag{LQ control problem}
 \end{align}$$
 
 where $Q$ and $R$ symmetric.
 We need to put some conditions on the matrices $Q$, $R$, $W$,
-$A$, $B$ to
+$A$, $B$, $C$ to
 ensure that the optimal solution to our problem yields a
 stable system (and that we are maximizing, not minimizing).
 The relevant conditions are usually stated in terms of a problem
@@ -953,174 +825,92 @@ Let
 
 
 $$\begin{align}
-{\hat X}_t &=\beta^{t\over 2} X_t\\
-{\hat u}_t &=\beta^{t\over 2} (u_t+R^{-1}W'X_t)\\
-{\hat A}   &= \sqrt{\beta}(A-BR^{-1}W')\\
-{\hat B}   &=\sqrt{\beta}B\\
-{\hat Q}   &=Q-WR^{-1}W'.
+{\tilde X}_t &=\beta^{t\over 2} X_t\\
+{\tilde u}_t &=\beta^{t\over 2} (u_t+R^{-1}W'X_t)\\
+{\tilde A}   &= \sqrt{\beta}(A-BR^{-1}W')\\
+{\tilde B}   &=\sqrt{\beta}B\\
+{\tilde Q}   &=Q-WR^{-1}W'.
 \end{align}$$
 
-Assume that $\hat Q$ and $R$ are negative definite matrices
+Assume that $\tilde Q$ and $R$ are negative definite matrices
 (which is an assumption that can be weakened)
 and assume that there exists a matrix
-$\hat F$ such that $\hat A-\hat B \hat F$ has eigenvalues
+$\tilde F$ such that $\tilde A-\tilde B \tilde F$ has eigenvalues
 inside the unit circle.  In this case, the system is stable
 and, in the language of control theorists,
- ($\hat A,\hat B$) is stabilizable.  The matrix $\hat F$ that is
+ ($\tilde A,\tilde B$) is stabilizable.  The matrix $\tilde F$ that is
 relevant for us is the matrix governing the optimal
-solution, namely, $\hat u_t = -\hat F \hat X_t$.
+solution, namely, $\tilde u_t = -\tilde F \tilde X_t$.
 
-To derive this policy rule, we first write out Bellman's 
-equation for (LQ control problem). We will correctly guess that
-the value function is also quadratic---since it is a sum
-of quadratic terms. Let $V(\hat{X})= \hat{X}' P \hat X$ plus a constant term
-that can be ignored when deriving the optimal policy
-without loss of generality. 
-The Bellman equation is thus:
-
-$$\begin{equation}
-  \hat X' P\hat X = \max_{\hat u} \ \hat{X}' \hat{Q} \hat{X}+\hat{u}'R \hat{u} 
-                    + (\hat A\hat X+\hat B\hat u)'P (\hat A\hat X+\hat B\hat u). \tag{lqbellman}
-\end{equtation}
-
-At this point, we don't know $P$ but we can guess one and
-iterate as before. If the conditions on the coefficient matrices
-are satisfied, we can derive the formula for $\hat u$ by
-solving the maximization problem in (\lqbellman):
-
-$$\begin{equation}
- \hat u = - (R+\hat B'P\hat B)^{-1} (\hat B' P \hat A)\hat X\equiv -\hat F\hat X\tag{lqu}
-\end{equation}$$
-
-and we can substitute this answer into right hand side of (lqu).
-When we do that, we will notice that the right hand side of the Bellman equation
-is also quadratic in $X$, that is  $\hat X'P\hat X=\hat X'(\ldots)\hat X$.
-We want to find $P$ that equates these quadratic expressions.
-Since we are maximizing, we start with a negative definite
-symmetric matrix $P^0$ and  iterate on the following mapping:
-
-$$\begin{equation}
-P^{n+1} &={\hat Q}+{\hat A}' P^{n} {\hat A} -{\hat A}' P^n
-                   {\hat B} (R+{\hat B}' P^n {\hat B})^{-1}
-                     {\hat B}' P^n {\hat A}\tag{riccati}
-\end{equation}$$
-
-which we call the *Riccati* equation. Once it has converged,
-we can map back to the original state and control vectors.
-To see how, note that if $\hat u_t=-\hat F\hat X_t$, then
+If the conditions above are satisfied, then the optimal policy function
+for the original optimization problem is the time-invariant linear
+rule:
 
 $$\begin{align}
- u_t & = -(\hat F+R^{-1}W') X_t \\
-     & = -((R+\hat B'P\hat B)^{-1} (\hat B' P \hat A)+R^{-1}W') X_t \\
-     & = -(R+\beta B'P B)^{-1} (\beta B' P A -\beta B'PBR^{-1}W'
-             +(R+\beta B'PB)R^{-1}W')X_t \\
-     & = -((R+\beta B'P B)^{-1} (\beta B' P A +W') X_t
-     & \equiv F X_t\tag{solution}
+     u_t=-F X_t,\qquad F&=(R+\beta B' P B)^{-1} (\beta B' P A+W')\\
+                        &=(R+{\tilde B}' P{\tilde B})^{-1}{\tilde B}' 
+                                          P{\tilde A}+R^{-1}W'\\
+                        & \tilde F + R^{-1}W'.\tag{7}\label{solution}
 \end{align}$$
 
-Unlike the policy function, no conversion is needed for
-$P$ because $\hat X_t=\beta^{t/2} X_t$ and therefore does
-not affect the Riccati updating.
+The matrix $P$ in \ref{solution} is the steady-state solution 
+to the matrix Riccati difference equation 
+
+$$\begin{align}
+   P_t&=Q+\beta A' P_{t+1} A -(\beta A' P_{t+1} B + W)
+          (R+\beta B' P_{t+1} B)^{-1} (\beta B' P_{t+1} A+W')\\
+      &={\tilde Q}+{\tilde A}' P_{t+1} {\tilde A} -{\tilde A}' P_{t+1} 
+                   {\tilde B} (R+{\tilde B}' P_{t+1} {\tilde B})^{-1}
+                     {\tilde B}' P_{t+1} {\tilde A}\tag{8}\label{riccati}
+\end{align}$$
+
+as $t\rightarrow -\infty$, with terminal condition $P_T\leq 0$.
 
 There have been many algorithms developed for the solution of the 
-discrete-time Riccati equation.  In all cases, we take 
+discrete-time Riccati equation. 
+In all cases, we take 
 as given the matrices $A$, $B$, $Q$, $R$, $W$ and scalar $\beta$
-(or equivalently ${\hat A}$, ${\hat B}$, ${\hat Q}$, and $R$),
-tolerance criteria, and a matrix norm $\Vert\cdot\Vert$.
-The simplest method is simply direct iteration as described 
-above.
-
-With a steady-state solution to the Riccati matrix, we can use (solution)
-to compute $F$ and the law of motion for the original state variables:
-
-$$\begin{equation}
-   X_{t+1}=(A-BF) X_t. \tag{law of motion}
-\end{equation}$$
-
-Given an initial condition for the states, $X_0$, we can trace out 
-the evolution of $X_t$ to generate time series for the economy. Next,
-we consider how this changes when we add shocks to the economy.
+(or equivalently ${\tilde A}$, ${\tilde B}$, ${\tilde Q}$, and $R$),
+tolerance criteria $\gamma_1$ and $\gamma_2$, and 
+a matrix norm $\Vert\cdot\Vert$.
+The simplest method is simply direct iteration.
+To do this, set an initial symmetric 
+Riccati matrix, $P^0\leq 0$.  Then the steps are as follows:
 
 
-# ╔═╡ 44443333-3333-5333-8333-333333333333
-md"""
-### Adding Stochastic Shocks
-
-In the stochastic version of the general control problem,
-the law of motion for the states is
-
-$$\begin{equation}
-   X_{t+1}=A X_t+B u_t + C\epsilon_{t+1},\tag{addC}
-\end{equation}$$
-
-where $E\epsilon_{t+1}=0$ and $E\epsilon_{t+1}\epsilon_{t+1}=I$.
-With these stochastic shocks included, we take an expected value of the objective
-in (LQ control problem) and the continuation value in the Bellman equation
-is now:
+1.  At iteration $n$, we compute $P^{n+1}$ and ${\tilde F}^n$ to be
 
 $$\begin{align}
-  E_tV(X_{t+1}) &= E_t (A X_t+B u_t + C\epsilon_{t+1})' P 
-                      (A X_t+B u_t + C\epsilon_{t+1})
-                &= (A X_t+B u_t)'P (A X_t+B u_t)'
-                   + 2(AX_t + B u_t)' PC E_t\epsilon_{t+1} 
-                   + E_t\epsilon_{t+1}'C'PC\epsilon_{t+1} \\
-                &= (A X_t+B u_t)'P (A X_t+B u_t)' + C'C
-                   + E_t\epsilon_{t+1}'C'PC\epsilon_{t+1}.
+P^{n+1}&={\tilde Q}+ {\tilde A}' P^n {\tilde A}-{\tilde A}'P^n {\tilde B} 
+(R+{\tilde B}'P^n {\tilde B})^{-1} {\tilde B}'P^n {\tilde A}\\
+{\tilde F}^n &= (R+{\tilde B}' P^n {\tilde B})^{-1} {\tilde B}' P^n {\tilde A}
 \end{align}$$
 
-The last term does not depend on $X_t$ or $u_t$ and
-only affects the constant term in value function. Therefore,
-$P$ and $F$ are unchanged. What will change are the pictures
-of the time series because the evolution of $X$ does depend
-on the shock. We might also have issues when using the LQ
-setup as an approximate economy if shocks are very large
-and the true policy function is impacted by the variance-covariance
-of the shocks.
+2. If $\Vert P^{n+1} -P^n\Vert< \gamma_1 \Vert P^n\Vert$ and
+$\Vert {\tilde F}^{n+1} -{\tilde F}^n\Vert< \gamma_2 \Vert 
+{\tilde F}^n\Vert$, go to (c);
+otherwise, increase $n$ by one and return to (a).
 
+3. Set $F={\tilde F}^n+R^{-1}W'$, $P=P^n$.
 
-"""
-
-# ╔═╡ 55553333-3333-5333-8333-333333333333
-md"""
-### Adding Aggregate States
-
-The linear-quadratic framework is easily adaptable to problems
-with aggregate state variables in the state vector $X_t$.
-Here, we consider splitting $X_t$ into three subvectors
-with the first $X_{1t}$ being individual states,
-the second $X_{2t}$ being exogenous states
+With a steady-state solution to the Riccati matrix, we can use \ref{solution}
+to compute $F$ and the law of motion for the state variables:
 
 $$\begin{equation}
-\left[\matrix{X_1\cr X_2\cr X_3\cr}\right]_{t+1}=
- \left[\matrix{ A_{11}& A_{12} & A_{13} \cr
-                0     & A_{22} & A_{23}\cr
-                0     & A_{32} & A_{33}\cr }\right]
-\left[\matrix{X_1\cr X_2\cr X_3\cr}\right]_t
-+\left[\matrix{B_1\cr 0\cr 0\cr}\right]u_t
-+\left[\matrix{\epsilon_1\cr\epsilon_2\cr\epsilon_3\cr}\right]_{t+1}.
+   X_{t+1}=(A-BF) X_t + C\epsilon_{t+1}\tag{9}\label{law of motion}
 \end{equation}$$
 
+Furthermore, given an initial condition for the states, $X_0$, and a 
+realization of the shocks, $\epsilon_t,\ t\geq0$, we can generate time-series
+for $X_t$ via \ref{law of motion} 
+and $u_t$ via \ref{solution}. 
 
-
-
-"""
-
-
-
-
-
-# ╔═╡ 66663333-3333-5333-8333-333333333333
-md"""
-## Vaughan's Method
-
-Vaughan (1970) proposed a nonrecursive method for solving dynamic
-programming problems with quadratic returns and linear constraints.
-Vaughan assumes no
+An alternative way to solve (LQ control problem) relies on the insights
+of Vaughan (1970).  Vaughan assumes no
 discounting or cross-product terms, so we will continue working with 
 the variables
 and coefficients to $\tilde X$, $\tilde u$, $\tilde A$, $\tilde B$, and
-$\tilde Q$. (See Section X.)
-Also note that because the decision function for
+$\tilde Q$. Also note that because the decision function for
 $u$ does not depend on the variances and covariances of $\epsilon$,
 we can abstract from the uncertainty for now.
 
@@ -1255,12 +1045,15 @@ Furthermore, given an initial condition for the states, $X_0$, and a
 realization of the shocks, $\epsilon_t,\ t\geq0$, we can generate time-series
 for $X_t$ and $u_t$.
 
+Let's consider an example.  REDO SIMPLEST GROWTH MODEL HERE.
+
+
 """
 
 
 # ╔═╡ 3d63c66c-b5dd-11f1-b766-338e58c22c81
 md"""
-## The Kalman Filter and MLE
+## The Kalman Filter
 
 The Kalman filter is a recursive algorithm for estimating a latent
 state vector at a particular point in time based on data that has been 
@@ -1448,7 +1241,7 @@ guesses for $x_0$ and $\Sigma_0$, recursively update the estimates
 of the mean and variance of the state using (update), (Sigma),
 (mean2) and (var2) (in that order).  Along the way,
 store $v_t$ and $\Omega_t$ using  (innovation) and (innovvar).
-To compute parameters, we maximize the log-likelihood function:
+To compute parameters, we need to maximize the log-likelihood function:
 
 $$\begin{equation}
   \ln L= \sum_t \{ -{m\over 2} \ln 2\pi-{1\over 2} \ln |\Omega_t| -{1\over 2} 
@@ -1477,20 +1270,30 @@ with the stationary $\Sigma$ that solves (stationary)
 and set $x_0$ to the unconditional mean of the state vector.
 
 Notice that (stationary)
-looks exactly like the Riccati equation computed earlier
-if we replace
+looks exactly like the Riccati equation if we replace
 $A$ by $A'$, $C'$ by $B$, and $\Sigma$ by $P$, that is:
 
 $$\begin{equation}
   P = Q + A'P A - A'PB(R+B'PB)^{-1} B'PA.
 \end{equation}$$
 
-It turns out that maximizing the quadratic return function depends
-on the same mathematics as minimizing the quadratic distance between data
+Why do these recursive formulas look the same? It turns out that maximizing
+the quadratic return function is
+like minimizing the quadratic distance between data
 and model prediction.
 
 
 """
+
+# ╔═╡ 4d63c66c-b5dd-11f1-b766-338e58c22c81
+md"""
+## State Space Systems and MLE
+
+
+
+"""
+
+
 
 
 # ╔═╡ 43333333-3333-5333-8333-333333333333
@@ -3811,15 +3614,9 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═9ee36982-4d4f-4446-a7b7-8904e4daea7e
 # ╠═650d7424-efa6-4bbd-a18f-3ecf3320283a
 # ╠═33333333-3333-5333-8333-333333333333
-# ╠═9ff36982-4d4f-4446-a7b7-8904e4daea7e
-# ╠═660d7424-efa6-4bbd-a18f-3ecf3320283a
-# ╠═44433333-3333-5333-8333-333333333333
-# ╠═55533333-3333-5333-8333-333333333333
 # ╠═c61ff7cf-49f0-4a45-88a4-9f4cab7da31d
-# ╠═44443333-3333-5333-8333-333333333333
-# ╠═55553333-3333-5333-8333-333333333333
-# ╠═66663333-3333-5333-8333-333333333333
 # ╠═3d63c66c-b5dd-11f1-b766-338e58c22c81
+# ╠═4d63c66c-b5dd-11f1-b766-338e58c22c81
 # ╠═43333333-3333-5333-8333-333333333333
 # ╠═53333333-3333-5333-8333-333333333333
 # ╠═33777777-7777-4777-8777-777777777777

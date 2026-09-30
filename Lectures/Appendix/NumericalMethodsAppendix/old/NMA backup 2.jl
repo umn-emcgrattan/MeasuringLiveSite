@@ -1,0 +1,2854 @@
+### A Pluto.jl notebook ###
+# v1.0.3
+
+using Markdown
+using InteractiveUtils
+
+# ╔═╡ 11111111-1111-4111-8111-111111111111
+# Required packages
+using DelimitedFiles, Measures, Plots, PlutoUI, HypertextLiteral
+
+# ╔═╡ 66666666-6666-4666-8666-666666666666
+TableOfContents()
+
+# ╔═╡ 22222222-2222-4222-8222-222222222222
+md"""
+# Numerical Methods Appendix
+
+In this appendix,  we review math and computational preliminaries
+for the main lectures.
+
+"""
+
+# ╔═╡ 44444444-4444-4444-8444-444444444444
+md"""
+## Gaussian Quadrature
+
+Suppose we want a good method to approximate the following integral:
+
+$$\begin{equation}
+   \int_a^b f(x)\, dx \approx \sum_{i=1}^n \omega_i f(x_i).\tag{1}
+\end{equation}$$
+
+If we are allowed to choose weights $\omega_i$ and nodes
+$x_i$, we could vary them in such a way
+as to minimize the approximation error. In other words, we 
+have $2n$ "parameters" to vary for the most accurate approximation
+possible.  If we are integrating polynomials, this means
+that we can potentially get an exact solution for a $2n-1$
+degree polynomial (with at most $2n$ coefficents on 1, $x$,
+$x^2$, $\ldots$, and $x^{2n-1}$)) using only $n$ nodes!
+
+Let's try an example. Suppose $f(x)=1+2x+3x^2+4x^3$ with $a=-1$
+and $b=1$. The answer is $2+0+3\cdot 2/3+0=4$, with the two 0's appearing
+because of symmetry when evaluating $\int x\,dx$ or $\int x^3\,dx$
+at $-1$ and 1.  Now, let's show that we have a problem with 4
+equations and 4 unknowns:
+
+$$\begin{align}
+    \int_{-1}^1 1\, dx & = 2 = \omega_1 +\omega_2 \\
+    \int_{-1}^1 x\, dx & = 0 = \omega_1 x_1+\omega_2 x_2\\
+    \int_{-1}^1 x^2\, dx & = 2/3 = \omega_1 x_1^2+\omega_2 x_2^2\\
+    \int_{-1}^1 x^3\, dx & = 0 = \omega_1 x_1^3+\omega_2 x_2^3
+\end{align}$$
+
+with solution $\omega_1=\omega_2=1$ and $x_1=-x_2=-1/\sqrt{3}$.
+If we use \emph{any} cubic $f(x)=a+bx+cx^2+dx^3$, we go through
+the same steps and will find that 
+
+$$\begin{equation}
+   \int_{-1}^1 f(x)\, dx =  f(-1/\sqrt{3})+f(1/\sqrt{3}).
+\end{equation}$$
+
+More generally, we would use the $2n$ conditions for 
+any $n$:
+
+$$\begin{equation}
+   \int_{-1}^1 x^k\,dx = \sum_{i=1}^n \omega_i x_i^k, \quad k=0,\ldots, 2n-1.
+\end{equation}$$
+
+This will obviously become very messy to solve for large $n$, but there
+is a simple way to use classes of polynomials to make this recursive.
+Let's take the example of the Legendre class of polynomial with 
+$P_0(x)=1$, $P_1(x)=x$ and for $n>1$:
+
+$$\begin{equation}
+   (n+1)P_{n+1}(x) = (2n+1)xP_n(x) - nP_{n-1}(x).
+\end{equation}$$
+
+We now have enough to state the theorem. For any polynomial
+$f$ of degree at most $2n-1$, the approximation in (1) is exact
+if $x_1,\ldots, x_n$ are the roots of the Legendre polynomial $P_n(x)$
+and 
+
+$$\begin{equation}
+  \omega_i = \frac{2}{(1-x_i^2)[P'_n(x_i)]^2}.
+\end{equation}$$
+
+Suppose that we are integrating a function $f$ that is 
+defined on $[a,b]$ and *not* necessarily a polynomial.
+We can easily do a change of variables from $x$ on $[a,b]$
+to $z$ on $[-1,1]$ by using the following linear relation:
+
+$$\begin{equation}
+   x = \frac{a+b}{2} + \frac{b-a}{2} z
+\end{equation}$$
+
+and $dx=(b-a)/2 dz$.  In this case, the approximation in (1)
+is replaced by 
+
+$$\begin{equation}
+   \int_a^b f(x)\, dx \approx \frac{b-a}{2} \sum_{i=1}^n \omega_i 
+           f\left(\frac{a+b}{2}+\frac{b-a}{2}x_i).\tag{2}
+\end{equation}$$
+
+where $x_i$ and $\omega_i$ are the usual Gauss-Legendre nodes and 
+weights. As long as $f$ is sufficiently smooth on $[-1,1]$---and therefore
+has $2n$ derivatives that exist and are continuous on the interval---the
+approximation method is valid even if $f$ is not a polynomial.
+In this case, we use the same algorithm to find the $\omega_i$ weights
+and $x_i$ nodes to evauate the integral but we have to keep in
+mind that there is an approximation error that depends on $n$
+and the derivative $f^{(2n)}$.
+
+
+
+"""
+
+# ╔═╡ 7e508426-a228-4962-8a2a-bf456c1c37c9
+md"""
+## Discretized Autoregressive Process
+
+
+Suppose that we have an autoregressive process:
+
+$$\begin{equation}
+   y_{t+1} = \rho y_t + \epsilon_{t+1}, \quad  \epsilon_{t+1}\sim N(0,\sigma_\epsilon^2)
+\end{equation}$$
+
+and want to approximate it by an $n$-state Markov chain with 
+discrete values $y_1,y_2,\ldots,y_n$ and an transition matrix $\Pi$
+with element $\P_{ij}$ equal to the probability that the value is
+$y_j$ tomorrow given it is $y_i$ today.
+
+The first step is to choose points on the real line.  Let's do the
+most simple thing and pick a range for the $y_i$ points (after cutting off left and
+right tails of the normal distribution) and make them equally spaced.
+As an example, we can pick the range to be $[-3\sigma_y,3\sigma_y]$, where
+$\sigma_y=\sigma_\epsilon/\sqrt{1-\rho^2}$ is the standard deviation of
+$y$, and we can place $n$ equally spaced points: $y_1=-3\sigma_y$, $\ldots$, 
+$y_n=3\sigma_y$, and $\Delta=y_{i+1}-y_i$ constant.
+
+The second step is to construct the elements $\P_{ij}$, which is possible
+given we are working with normally distributed errors.  Start wih today's
+value $y_i$.  The autoregressive process tells us that 
+tomorrow's value is distributed as $N(\rho y_i,\sigma_\epsilon^2)$.
+If we were to draw a normal density centered at $\rho y_i$ and divide
+the real line into bins corresponding to the discrete states, we would
+have intervals $[y_j-\Delta/2,y_t+\Delta/2]$ around tomorrow's state.
+The $P_{ij}$ we want to compute is the probability that we are
+in the particular interval indexed by $j$:
+
+$$\begin{equation}
+   \P_{ij} &= \Phi\left(\frac{y_j+\Delta/2 - \rho y_i}{\sigma_\epsilon}\right)
+           -\Phi\left(\frac{y_j-\Delta/2 - \rho y_i}{\sigma_\epsilon}\right)
+\end{equation}$$
+
+where $\Phi(x) = prob(z\leq x)$ for $z\sim N(0,1)$ is the standard
+normal cumulative distribution function (CDF). The CDF for standard
+normal is known analytically and given by $\Phi(x) =1/\sqrt{2\pi} \int_{-\inf}^x \exp{-u^2/2}du$.
+For the two endpoints, we can assume the bins extend forever:
+
+$$\begin{align}
+   \P_{i1} &= \Phi\left(\frac{y_1+\Delta/2 - \rho y_i}{\sigma_\epsilon}\right)\\
+   \P_{in} &= 1-\Phi\left(\frac{y_n-\Delta/2 - \rho y_i}{\sigma_\epsilon}\right),
+\end{align}$$
+
+which ensures that $\sum_j P_{ij}=1$.
+
+Let's construct a 3$\times 3$ example to illustrate the method with
+$y_1=-a$, $y_2=0$, and $y_3=a$, where $\rho$, $\sigma_\epsilon$, and $a$
+are user-defined.  In this case, $y_{t+1}<-a/2$ is mapped
+to discrete state $y_1$, $y_{t+1}\in [-a/2,a/2]$ is mapped to 
+discrete state $y_2$ and $y_{t+1}>a/2$ is mapped to discrete state $y_3$.
+To construct $P$, we work row by row. Start with the discrete state today
+at $-a$. Tomorrow's value is distributed $N(-\rho a,\sigma_\epsilon^2)$
+and therefore:
+
+$$\begin{align}
+   \P_{11} &= \Phi\left(\frac{-a/2 + \rho a}{\sigma_\epsilon}\right)\\
+   \P_{12} &= \Phi\left(\frac{a/2 + \rho a}{\sigma_\epsilon}\right)
+               -\Phi\left(\frac{-a/2 + \rho a}{\sigma_\epsilon}\right)\\
+   \P_{13} &= 1-\Phi\left(\frac{a/2 + \rho a}{\sigma_\epsilon}\right),
+\end{align}$$
+
+Next, we construct the row associated with discrete state $y_i=0$. Using
+the formulas above, we get
+
+$$\begin{align}
+   \P_{21} &= \Phi\left(\frac{-a}{2\sigma_\epsilon}\right)\\
+   \P_{22} &= \Phi\left(\frac{a }{2\sigma_\epsilon}\right)
+               -\Phi\left(\frac{-a}{2\sigma_\epsilon}\right)\\
+   \P_{23} &= 1-\Phi\left(\frac{a}{2\sigma_\epsilon}\right).
+\end{align}$$
+
+Because of symmetry, we have $P_{31}=P_{13},$ $P_{32}=P_{23},$ and $P_{33}=P_{11}$.
+
+"""
+
+
+# ╔═╡ a61ff7cf-49f0-4a45-88a4-9f4cab7da31d
+md"""
+## Bisection Method
+
+The bisection method is a very robust method to solve a
+fixed point problem $f(x)=0$  in 
+cases where $x$ and $f(x)$ are scalars and $f$ is continuous
+on the interval $[a,b]$.  If $f(a)$ and $f(b)$ have opposite
+signs and $f$ is continuous, then there must be at least
+one fixed point. Let $c=(a+b)/2$ be the midpoint of the interval.
+If $f(a)$ and $f(c)$ are of opposite signs, then we know
+that the new smaller interval $[a,c]$ must contain a fixed
+point of $f$---and we continue bisecting.  If $f(a)$ and $f(c)
+are the same signs, then we know to continue our search 
+in $[c,b]$ and continue bisecting there. We repeat 
+this until the value of $f$ is within a pre-specified
+distance of 0 or the interval length is below a pre-specified
+threshhold.
+
+Let's consider a simple quadratic example with
+$f(x)=x^2-x-2$, $a=1$, and $b=5$. This function
+is continuous on $[a,b]$ with $f(1)=-2<0$,
+$f(5)=18>0$ and therefore $f(a)f(b)<0$. If
+we bisect this interval at $x=3$, we find
+that $f(4)=4>0$.  The new interval is thus $[1,3]$.
+The next bisection step is $x=2$ and $f(2)=0$. 
+Since this is the crossing point, we can stop.
+
+"""
+
+
+# ╔═╡ b61ff7cf-49f0-4a45-88a4-9f4cab7da31d
+md"""
+## Newton-Raphson Method
+
+Another popular method to find the fixed point of
+$f(x)=0$ is the Newton-Raphson method.
+This method can be applied to the scalar problem
+or to systems of equations where $x$ and $f$ are
+vectors of length $n$. As with the bisection method,
+we require continuity, that is, we require
+derivatives $\partial f_i(x)/\parital x_j$
+for all $i,j=1,\ldots, n$ that exist and are 
+continuous.  
+
+The idea of the method is obvious if you
+take a first-order Taylor expansion of $f$ around an
+initial guess for the solution, say $x_0$
+
+$$\begin{equation}
+   f(x) \approx f(x_0)+Df(x_0)(x-x_0) \tag{3}
+\end{equation}$$
+
+where the $(i,j)$ element of  $$Df(x)$ 
+is $\partial f_i(x)/partial x_j$. If $x_0$ is
+a good guess then we can use the linear approximation of $f$ 
+on the right hand side of (3) to find the fixed point rather
+than working directly with $f$. In other words,
+find $x$ that sets the linear approximation to 0:
+
+$$\begin{equation}
+   x = x_0- [Df(x_0)]^{-1}f(x_0).
+\end{equation}$$
+
+Given we know $x_0$, we can easily evaluate this,
+and we   have a new and better guess.
+More generally, we can continue to update the
+guess by iterating on $k$ in the following 
+recursion:
+
+$$\begin{equation}
+   x_{k+1} = x_k- [Df(x_k)]^{-1}f(x_k)
+\end{equation}$$
+
+until the norm $||x_{k+1}-x_k||$ is below
+a pre-specified threshhold.
+
+Let's try this with the quadratic example $f(x)=x^2-x-2$
+studied above. If we start with $x_0=3$ the next guess
+is $x_1=3-f(3)/f'(3)$ or  2.2. If we keep going,
+we have $x_2=2.0112$, $x_3=2.000046$, $x_4=2.0000000007$.
+
+
+"""
+
+
+
+
+
+
+# ╔═╡ 33333333-3333-5333-8333-333333333333
+md"""
+## Deterministic Growth Model Without Labor-Leisure Choice
+
+Consider an economy populated by a large number
+of infinitely-lived households (dynasties) with
+identical preferences over consumption defined 
+as follows
+
+$$\begin{align}
+   u(c_0,c_1,c_2,\ldots) = \sum_{t=0}^\infty \beta^t U(c_t),
+\end{align}$$
+
+where $c_t$ is consumption in period $t$ and parameter
+$\beta$ is the discount factor used to discount
+future consumption. Note that this *additively separable* functional
+form for preference utility will provide a lot of 
+tractability when we solve the model below.
+If there are $N$ households at
+all dates, then total consumption is $C_t=Nc_t$.
+Households supply their labor inelastically
+to firms that have a production technology $Y_t=F(K_t,H_t)$
+with a capital input $K_t$ and hours input $H_t$ in period $t$. 
+The total hours supplied in any period is equal to $N$ 
+times the number of hours supplied per household, which is
+constant.  Without loss of generality, we can normalize this 
+to 1, that is, set  $H_t=1$ and then output is given by
+$Y_t=F(K_t,1)$. 
+
+A benevolent planner has an initial stock of capital 
+$K_0$ and chooses total consumption each period to maximize lifetime
+utility of the typical household. Assuming capital depreciates
+at a constant rate $\delta$, the planner is constrained
+each period by the following resource constraint:
+
+$$\begin{align}
+  C_t + K_{t+1} \leg Y_t - (1-\delta) K_t, \tag{1}
+\end{align}$$
+
+which says that consumption plus gross investment,
+$X_t= K_{t+1} -$ $(1-\delta) K_t$, cannot exceed total output
+$Y_t$. To simplify the description of the planner's
+problem, let $f(K_t) = F(K_t,1)+(1-\delta)K_t$.
+Then the planner solves:
+
+$$\begin{align}
+  \max_{\{K_{t+1}\}_{t=0}^\infty}\ 
+         &  \sum_{t=0}^\infty \beta^t U(f(K_t)-K_{t+1})\\
+      s.t.\ \ & 0\leq K_{t+1}\leq f(K_t)\\
+              & \text{given} K_0>0.
+\end{align}$$
+
+Since we assumed that the utility is additively separable,
+the problem can be stated in terms of functions rather than
+infinite sequences: instead of trying to find $\{K_{t+1}\}_{t=0}^\infty$,
+we are looking for a function $g$ such that 
+$K_{t+1}=g(K_t)$ summarizes the optimal plan for the planner.
+To make progress on this, 
+consider writing out the objective function as follows:
+
+$$\begin{equation}
+  U(f(k_0)-k_1)+\beta U(f(k_1)-k_2) + \beta^2 U(f(k_2)-k_3)+\ldots
+\end{equation}$$
+
+Then, take the derivative with respect to one of the stocks---specifically, 
+$k_{t+1}$---to get
+
+$$\begin{align}
+  0 &= -\beta^t U'(f(K_t)-K_{t+1})+\beta^{t+1} U'(f(K_{t+1})-K_{t+2})f'(K_{t+1})\\
+  0 &= -\beta^t [U'(C_t)-\beta U'(C_{t+1})f'(K_{t+1})]
+\end{align}$$
+
+where the expression in square brackets when set equal to zero is the famous
+*Euler equation*. Consider substituting any candidate solution into
+the Euler equation to get:
+
+$$\begin{equation}
+  U'(f(K_t)-g(K_t)) = \beta U'(f(g(K_t))-g(g(K_t)))f'(g(K_t}),
+\end{equation}$$
+
+which must hold for all periods $t$. Notice that his is a 1-dimensional
+functional equation and solving it once provides an answer to 
+the problem at all dates. If we know $U$ and $F$ (and thus $f$),
+then the problem is relatively standard.  Let's consider the
+case of $U(c)=\log c$ and $F(K,H)=K^\theta H^{1-\theta)$. In this
+case $f(K)=K^\theta+(1-\delta)K$. This implies the following 
+functional equation (where $t$ is dropped without loss of generality):
+ 
+$$\begin{equation}
+  \frac{1}{K^\theta+(1-\delta)K-g(K)} = \beta \frac{\theta g(K)^{\theta-1}+1-\delta}
+                                              {g(K)^\theta + (1-\delta) g(K)-g(g(K))}
+\end{equation}$$
+
+Later we will use a standard method called the *finite element method* 
+to solve this functional equation
+using classes of functions to approximate $g$ and criteria that ensure
+we have allowed enough flexibility in the function to get the
+left and right hand side of the functional equation sufficiently close.
+
+In the meantime, we can analyze a second functional equation called
+the Bellman equation to find $g$. The Bellman equation is
+a way to recursively summarize the planner's problem
+
+$$\begin{equation}
+    V(K_0) = \max_{K_1} \{U(f(K_0)-K_1) \ \beta V(K_1)\}
+\end{equation}$$
+    
+where $V(K_0)$ is equal to the lifetime utility starting with
+$K_0$ and $V(K_1)$ is equal to lifetime utility starting with $K_1$.
+The difference is the utility flow between period 0 and 1.
+This functional equation is defined over the value function $V$
+and can be simplified if we use the first-order condition:
+
+$$\begin{equation}
+    -U'(f(K_0)-K_1) = \beta V'(K_1),
+\end{equation}$$
+
+to substitute for $K_1$ and thus have a functional equation in $V$.
+The simplest solution method involves guessing $V$, deriving the
+optimal $K_1$, and with the right hand side fully known, updating
+the guess for $V$. 
+With the right properties on $U(\cdot)$ and $f(\cdot)$
+and $\beta<1$, the iterations will converge.  
+
+More specifically, we pick a grid on an interval of the real line,
+say, $[0,\bar K]$, where $\bar K$ is a value that is high enough
+to be rarely chosen.  For practical reasons, we do not choose
+something so high as to be never feasible because we end
+up trying to solve the problem in a domain that is not economically
+relevant.  A good rule of thumb is to choose $\bar K$ equal to
+a multiple of 2 or 3 times the steady state value. The steady 
+state value is $K_{ss}$ that satisfies $K_{ss}=g(K_{ss})$ and thus
+can be found by solving $\beta f'(K_{ss})=1$. This follows from
+the fact that in the steady state $C_t=C_{t+1}$ and therefore,
+$U'(C_t)=U'(C_{t+!}$ and these terms cancel in the Euler
+equaiton above. If the production technology is of Cobb-Douglas
+form with capital share $\theta$, then we have the following
+steady state capital stock:
+
+$$\begin{equation}
+    K_{ss}= \left(\frac{\beta \theta}{1-\beta(1-\delta)}\right)^{\frac{1}{1-\theta}}
+\end{equation}$$
+
+As a check, set $\beta=1$ so there is no discounting of the future and
+$\delta=1$ so capital fully depreciates each period. Since $Y_{ss}=K_{ss}^\theta$,
+that means that the capital-output ratio---and the investment-output ratio---is
+$K_{ss}/Y_{ss}=\theta$.  If $\theta$ is 1/3, then 1/3 of output is invested
+and 2/3 of output is consumed. 
+
+Now suppose that we choose more realistic
+values for $\beta$ and $\delta$ that yield capital-output ratios and investment
+output ratios as in the data and we use an estimate for $\theta$ consistent
+with income payments to capital. For example, the U.S.~capital-output ratio
+is on the order of 5 (if we consider all forms of capital investment).
+The investment-output ratio is on the order of 1/4 if we include consumer
+durables and public investment.  The capital share $\theta$ is roughly 1/2 if 
+we count all non-employee payments as payments to capital. If the capital
+share is 1/2, then the depreciation rate---which is equal to the investment
+rate in a steady state with no growth---is equal to 1/20. That leaves
+the discount factor, which can be inferred from knowing $\theta$,
+$\delta$, and the capital-output ratio, is $\beta=20/21$. 
+These estimates imply the following values in the steady state:
+$K_{ss}=25$, $X_{ss}=1.25$, $C_{ss}=3.75$, and $Y_{ss}=5$.
+
+An easy way to make units interpretable is to divide all variables
+by $Y_{ss}$. Let $k_t=K_t/Y_{ss}$, $k_{t+1}=K_{t+1}/Y_ss$, and
+$c_t=C_t/Y_{ss}$. If utility defined over $C_t$ is logarithmic
+then $U(C_t)=\log(Y_{ss})+ \log c_t$. Thus, maximizing $U(C_t)$
+is the same as maximizing $\log c_t$. The budget constraint
+in this case can be divided through by $Y_{ss}$ so that the problem
+to solve is redefined as follows:
+
+$$\begin{align}
+  \max_{\{k_{t+1}\}_{t=0}^\infty}\ 
+         &  \sum_{t=0}^\infty \beta^t \log c_t \\ 
+      s.t.\ \ & c_t + k_{t+1} - (1-\delta)k_t = A k_t^\theta
+              & \text{given} k_0>0.
+\end{align}$$
+
+where $A=Y_{ss}^\theta$. 
+
+ 
+
+SET THIS UP FOR METHOD I/II/III
+
+
+
+
+"""
+
+
+
+# ╔═╡ 13333333-3333-5333-8333-333333333333
+md"""
+## Deterministic Growth Model With Labor-Leisure Choice
+
+
+SET THIS UP FOR METHOD I/II/III
+
+
+"""
+
+# ╔═╡ 23333333-3333-5333-8333-333333333333
+md"""
+## Stochastic Growth Model With Labor-Leisure Choice
+
+
+
+SET THIS UP FOR METHOD I/II/III
+
+
+
+"""
+
+# ╔═╡ 43333333-3333-5333-8333-333333333333
+md"""
+## Weighted Residual Methods
+
+Weighted residual methods will applied to the following problem: 
+find $d:I\!\!R^m\rightarrow I\!\!R^n$
+that satisfies a functional equation $F(d)=0$,
+where $F:C_1\rightarrow C_2$ and $C_1$ and $C_2$ are function spaces.
+As an example, think of $d$ as decision or policy variables
+and $F$ as  first-order conditions from some maximization problem.
+The goal here is to find an approximation
+$d^n(x;\theta)$ on $x\in \Omega$ 
+which depends on a finite-dimensional vector
+of parameters $\theta=[\theta_1,\theta_2,\ldots,\theta_n]'$.
+Weighted residual methods assume that $d^n$ is a finite linear combination
+of known functions, $\psi_i(x)$, $i=0,\ldots,n$, called {\sl basis functions}:
+\begin{equation}
+d^n(x;\theta) = \psi_0(x) + \sum_{i=1}^n \theta_i \psi_i(x).
+\label{approximation}
+\end{equation}
+The functions $\psi_i(x)$, $i=0,\ldots, n$ are typically 
+simple functions.  Standard examples of basis functions include
+simple polynomials (for example, $\psi_0(x)=1$, $\psi_i(x)=x^i$),
+orthogonal polynomials (for example, Chebyshev polynomials), and 
+piecewise linear functions.
+
+Consider a popular example for the basis
+functions, namely, 
+piecewise linear approximations.
+More specfically, we can use:
+
+$$\begin{equation}
+\psi_i(x) = 
+   \begin{cases}
+        {x-x_{i-1}\over x_i-x_{i-1}} & \text{if}\ x\in [x_{i-1},x_i] \\
+        \noalign{\bigskip}
+        {x_{i+1}-x\over x_{i+1}-x_i} & \text{if}\ x\in [x_i,x_{i+1}] \\
+        \noalign{\medskip}
+        0        & \text{elsewhere}.
+   \end{cases} \tag{linear fem bases}
+\end{equation}$$
+
+Note that we do not need to have the points $x_i$, $i=1,\ldots, n$ equally
+spaced.  For example, if we want to represent a function 
+that has large gradients or kinks in certain places -- say, because 
+inequality constraints bind -- then we can cluster
+points in those regions.  In regions where the function
+is near-linear, we do not need many points.
+
+The idea behind the weighted residual methods is to choose
+the $\theta_i$ parameters so that functional equation $F$ is approximately satisfied.
+Let $R(x;\theta)$ be the residual if we evaluate $F$ at some approximate $d^n$, that is:
+
+$$\begin{equation}
+R(x;\theta) = F(d^n(x;\theta)).
+\end{equation}$$
+
+In other words, we want to choose the vector of unknowns $\theta$
+so that the residual is close to zero at all $x$.
+Weighted residual methods get the residual close to zero
+in the weighted integral sense.  That is, we choose $\theta$ 
+so that
+
+$$\begin{equation}
+\int_\Omega \phi_i(x) R(x;\theta) dx = 0, \quad i=1,\ldots, n,
+\end{equation}$$
+
+where $\phi_i(x)$, $i=1,\ldots,n$ are {\sl weight functions}.
+Note that $\phi_i(x)$ and $\psi_i(x)$ can be different functions.
+Alternatively, the weighted integral can be written
+
+$$\begin{equation}
+\int_\Omega w(x) R(x;\theta) dx = 0,
+\tag{weighted integral}
+\end{equation}$$
+
+where $w(x)=\sum_i\omega_i\phi_i(x)$ and (\ref{weighted integral})
+must hold for any nonzero weights $\omega_i$, $i=1,\ldots,n$.
+Therefore, instead of setting $R(x;\theta)$ to zero for all
+$x\in\Omega$, the method sets a weighted integral of $R$ to zero.
+
+We discussed different choices of 
+of weight functions, for example:
+determining the coefficients $\theta_1,\ldots,\theta_n$. 
+
+
+1. \textbf{Least Squares}: $\phi_i(x) = \partial R(x;\theta)/
+          \partial \theta_i$.
+          This set of weights can be derived by calculating the first-order
+          derivatives for the following optimization problem: 
+          $\min_{\theta} \int_\Omega R(x;\theta)^2 \, dx.$
+
+2. \textbf{Collocation}: $\phi_i(x) = \delta(x-x_i)$, where $\delta$ is 
+          the Dirac delta function.  This set of weights implies that the 
+          residual is set to zero at $n$ points $x_1,\ldots, x_n$ 
+          called the {\sl collocation points}: 
+          $R(x_i;\theta)=0$, $i=1,\ldots,n$.
+          If the basis functions are chosen from a set of 
+          orthogonal polynomials with collocation points given as the
+          roots of the $n$th polynomial in the set, the method is 
+          called {\it orthogonal collocation}.
+
+3. \textbf{Galerkin}: $\phi_i(x) = \psi_i(x)$.
+          In this case, the set of weight functions is the same as the basis
+          functions used to represent $d$. Thus, the Galerkin method
+          forces the residual to be orthogonal to each of the basis 
+          functions.   As long as the basis
+          functions are chosen from a complete set of functions, then
+          equation
+          (\ref{approximation}) represents the exact solution, given that enough
+          terms are included.  The Galerkin method is motivated by
+          the fact that a continuous function is zero if it is 
+          orthogonal to every member of a complete set of functions.
+
+          
+To illustrate weighted residual 
+methods, we worked through a a simple problem in which the
+coefficients $\theta_i$, $i=1,\ldots, n$ of (\ref{approximation})
+satisfy a linear system of equations (that is, $A\theta=b$, where 
+$A$ and $b$ do not depend on $\theta$), namely,
+
+$$\begin{equation}
+F(d)(x) = d'(x)+d(x) = 0.  \tag{simple functional}
+\end{equation}$$
+
+If we use simple polynomials for the $d^n$, that is,
+$x^i$, $i=1,\ldots,n$, then the approximation is:
+
+$$\begin{equation}
+d^n(x;\theta) = 1 + \theta_1x +\theta_2 x^2 + \theta_3 x^3
+              + \ldots + \theta_n x^n.  \tag{simple approximation}
+\end{equation}$$
+
+Note that $\psi_0(x)=1$ so that the boundary
+condition at $x=0$ is satisfied.
+The task is to find the coefficients $\theta_i$, $i=1,\ldots, n$ by applying 
+a weighted residual method with one of the possible sets of weights.
+In each case, we solve a linear system of equations for $\theta$, 
+$A\theta=b$.
+
+Let's start with least squares.  
+In this case, the problem is to find $\theta$ that minimizes the
+integral of the squared residual.  The residual can be found by 
+substituting equation
+(\ref{simple approximation}) into equation (\ref{simple functional}).  
+The first-order conditions of the minimization of the squared residual
+imply that $\theta_1,\ldots,\theta_n$ satisfy
+
+$$\begin{equation}
+\int_0^{\bar x} {\partial R(x;\theta)\over\partial\theta_i}
+                         R(x;\theta)\, dx =0,\quad i=1,\ldots, n,
+\end{equation}$$
+
+where the residual and its derivative are given by 
+
+$$\begin{align}
+    R(x;\theta) & = 1+ \sum_{i=1}^n \theta_i \{i x^{i-1}+x^i\},\\
+    \noalign{\smallskip} 
+   {\partial R(x;\theta)\over \partial \theta_i} & = i x^{i-1}+x^i.
+\end{align}$$
+
+Suppose that $n=3$ and $\bar x=6$. Then the following system of
+equations is solved for $\theta$:
+
+$$\begin{equation}
+\left\{\int_0^6
+  \begin{bmatrix}
+        1+x \\ 2x+x^2 \\ 3x^2+x^3
+  \end{bmatrix}
+  \begin{bmatrix}
+        1+x  &  2x+x^2  &  3x^2+x^3
+  \end{bmatrix} \, dx \right\}
+  \begin{bmatrix}
+        \theta_1\\ \theta_2\\ \theta_3
+  \end{bmatrix}
+       = -\int_0^6 
+      \begin{bmatrix}
+             1+x \\ 2x+x^2 \\ 3x^2+x^3
+       \end{bmatrix} \,dx
+\end{equation}$$
+
+or, more simply,
+
+$$\begin{equation}
+      \begin{bmatrix}
+          \hfill 114.0& \hfill   576.0& \hfill   3067.2\\
+          \hfill  576.0& \hfill  3139.2& \hfill  17496.0\\
+          \hfill 3067.2& \hfill 17496.0& \hfill 100643.7
+      \end{bmatrix}
+      \begin{bmatrix}
+          \theta_1\\ \theta_2\\ \theta_3
+      \end{bmatrix}
+   =  \begin{bmatrix}
+          \hfill -24\\ \hfill -108\\ \hfill -540
+      \end{bmatrix}.
+\end{equation}$$
+
+More generally, we can use the fact that
+
+$$\begin{equation}
+R(x;\theta)=(C\vec x + e)'\theta+1,
+\end{equation}$$
+
+where $\vec x=[x,x^2,\ldots,x^n]'$, $e=[1,0,\ldots,0]'$, and
+
+$$\begin{equation}
+C = \begin{bmatrix}
+          1 & 0 & 0 & \cdots & 0 & 0\\
+          2 & 1 & 0 & \cdots & 0 & 0\\
+          0 & 3 & 1 & \cdots & 0 & 0\\
+          \vdots  & \vdots & \vdots  & \vdots & \vdots & \vdots\\
+          0 & 0 & 0 & \cdots & n & 1
+    \end{bmatrix}.
+\end{equation}$$
+
+Since the residual $R$ is linear in $\theta$,
+the derivatives with respect to $\theta$ are given by $C\vec x+e$.  Thus, the
+system of equations to be solved to compute the
+coefficients $\theta$ for the least squares method is given by
+
+$$\begin{equation}
+    \left\{\int_0^{\bar x} (C\vec x+e)(C\vec x+e)'\,dx\right\}
+        \theta = -\int_0^{\bar x} (C\vec x + e)\, dx
+\end{equation}$$
+
+or, more succinctly, $A\theta=b$ with
+
+$$\begin{align}
+    A &=  CMC'+ePC'+CP'e'+\bar x ee',\\
+    b &= -CP'-\bar x e,
+\end{align}$$
+
+and 
+
+$$\begin{align}
+  M & = \int_0^{\bar x} \vec x\vec x'\,dx
+      = \begin{bmatrix}
+             \bar x^3/3 & \bar x^4/4 & \cdots & \bar x^{n+1}/(n+1)\\
+             \bar x^4/4 & \bar x^5/5 & \cdots & \bar x^{n+2}/(n+2)\\
+             \vdots  & \vdots & \vdots  & \vdots\\
+             \bar x^{n+2}/(n+2) & \bar x^{n+3}/(n+3) & \cdots & \bar x^{2n+1}/(2n+1)
+        \end{bmatrix},\\
+  \noalign{\bigskip}
+  P & = \int_0^{\bar x} \vec x\,dx 
+      = \begin{bmatrix}
+             \bar x^2/2\cr \bar x^3/3\\
+              \vdots\\
+             \bar x^{n+1}/(n+1)
+        \end{bmatrix}.
+\end{align}$$
+
+In Figure 3 of the chapter from Marimon and Scott (1999), I 
+plot the approximate function $d^n$ for $n=3$ and the 
+exact solution $exp(-x)$.  If I had used $n=5$, then the two lines would
+be visually indistinguishable.
+
+Next, consider collocation.
+In this case, the problem is to find $\theta$ so that the residual 
+is equal to 0 at $n$ points in $[0,\bar x]$: $x_1,\ldots,x_n$.
+Suppose that the $x_i$ are evenly spaced on $[0,6]$ and that $n=3$,
+so that $x_1 = 0$, $x_2=3$, and $x_3=6$. 
+Then, $\theta$ must satisfy the following system of equations:
+
+$$\begin{equation}
+    \begin{bmatrix}
+       \hfill 1& \hfill  0& \hfill   0\\
+       \hfill 4& \hfill 15& \hfill  54\\
+       \hfill 7& \hfill 48& \hfill 324
+    \end{bmatrix}
+    \begin{bmatrix}
+       \theta_1\\ \theta_2\\ \theta_3
+    \end{bmatrix}
+    = \begin{bmatrix}
+           -1 \\ -1 \\ -1
+      \end{bmatrix}.
+\end{equation}$$
+
+More generally, we can solve $A\theta=b$ with $(C\vec x+e)'$ 
+defined above evaluated
+at $x_i$ in the $i$th row of $A$ and $b$ set to a vector of $-1$'s:
+
+$$\begin{equation}
+   \begin{bmatrix}
+      (C \vec x + e)'|_{x=x_1} \\
+      (C \vec x + e)'|_{x=x_2} \\
+      \vdots \\
+      (C \vec x + e)'|_{x=x_n}
+   \end{bmatrix}\, \theta
+        =
+   \begin{bmatrix}
+      -1\\ -1\\ \vdots\\ -1
+   \end{bmatrix}.
+\end{equation}$$
+
+In Figure 4 of the chapter, 
+I plot the approximate function $d^n$ and the exact
+solution.  If I choose $n=5$, the two lines are nearly indistinguishable.
+However, for $n=3$, the approximation is not as good as the least squares 
+approximation.  
+
+Finally, consider the Galerkin variant of the method.
+In this case, the problem is to find $\theta_1,\ldots,\theta_n$
+that satisfy
+\begin{equation}
+ \int_0^{\bar x} x^i R(x;\theta)\, dx =0,\quad i=1,\ldots, n.
+\label{weighted residual galerkin}
+\end{equation}
+Again, consider $n=3$ and $\bar x=6$. For these choices, 
+the equations in (\ref{weighted residual galerkin}) are given by
+
+$$\begin{equation}
+  \left\{\int_0^6
+     \begin{bmatrix}
+        x \\ x^2 \\ x^3
+     \end{bmatrix}
+     \begin{bmatrix}
+        1+x  &  2x+x^2  &  3x^2+x^3
+     \end{bmatrix} \, dx \right\}
+     \begin{bmatrix}
+        \theta_1\\ \theta_2\\ \theta_3
+     \end{bmatrix}
+            = -\int_0^6 
+               \begin{bmatrix}
+                  x \\ x^2 \\ x^3
+               \end{bmatrix}\, dx.
+\label{reduced galerkin}
+\end{equation}$$
+
+Note that we have written these equations in the form $A\theta=b$.
+If we compute the integrals in equation (\ref{reduced galerkin}), then the system 
+of equations becomes
+
+$$\begin{equation}
+    \begin{bmatrix}
+        \hfill   90.0& \hfill   468.0& \hfill   2527.2\\
+        \hfill  396.0& \hfill  2203.2& \hfill  12441.6\\
+        \hfill 1879.2& \hfill 10886.4& \hfill  63318.9
+    \end{bmatrix}
+    \begin{bmatrix}
+          \theta_1\\ \theta_2\\ \theta_3
+    \end{bmatrix}
+   =\begin{bmatrix}
+            \hfill -18\\ \hfill -72\\ \hfill -324
+    \end{bmatrix}.
+\end{equation}$$
+
+For general $n$ and $\bar x$, the coefficients solve
+$A\theta=b$, where $A$ and $b$ are the 
+following functions: 
+
+$$\begin{align}
+   A &=  MC'+P'e'\\
+   b &= -P'
+\end{align}$$
+
+with $M$, $C$, $P$, and $e$ as defined above.
+In Figure 5 of the chapter, I plot the approximate function $d^n$ and the exact
+solution.   The results are similar to those obtained with the 
+least squares method.  Again, if I choose $n=5$, then the
+approximate and exact solutions are visually indistinguishable.
+
+Next we will work with basis functions that are nonzero
+on only small regions of the domain of $x$.   The resulting
+representations of $d^n$ will be piecewise functions (for example,
+piecewise linear, piecewise quadratic).
+In the terminology of numerical analysts, we will be applying
+a {\sl finite element method}.
+Finite element methods use basis
+functions that are only nonzero on small regions of the domain of
+$x$ (for example, the tent functions drawn in Figure 2).
+
+The idea behind the finite element method is to break up 
+the domain of $x$ into smaller pieces, use low-order polynomials 
+to get good local approximations for the function $d$, and then piece 
+the local approximations
+together to get a good global approximation.
+In effect, one can think
+of the finite element method as a piecewise application
+of a weighted residual method.
+Thus, to apply a finite element method, we first
+divide the domain into smaller nonoverlapping subdomains.  On each of
+the subdomains, we construct a local approximation to 
+the function $d$.  For the problem in (\ref{simple functional}),
+$\Omega$ is 
+one-dimensional, and therefore, division of $\Omega$ means
+coming up with some partition, say, $[x_1,x_2,\ldots, x_n]$ on $I\!\!R$.
+Each subinterval $[x_i,x_{i+1}]$ is
+called an {\it element}.
+
+Suppose, for example, that we want to represent $d$ as a piecewise
+linear function;  that is, over each element, we assume that the approximation
+is of the form $a+bx$.
+Suppose also that we  want the function $d$ to be continuous 
+on the whole domain $\Omega$.
+How would we construct basis functions $\psi_i(x)$ so that we can 
+write $d^n$ as in (\ref{approximation})?
+
+The first step is to assign {\sl nodes} on the element. 
+For the finite element method, nodes are points on an element that are used
+to define the geometry of the element and to uniquely define the
+order of the polynomial being used to approximate the true solution
+over the element.  Since we  are assuming that an element is
+some interval $[x_i,x_{i+1}]$,  two nodes -- in particular,
+the two endpoints $x_i$ and $x_{i+1}$ -- are needed 
+to define the geometry.  And only two points are 
+needed to uniquely define a linear function.  Therefore, the
+nodes on a one-dimensional element with linear bases are the
+two endpoints of the element.
+
+The second step in constructing the basis functions is to 
+assume that the undetermined coefficients are equal to the 
+approximate solution at the nodal points.
+Assume that the numbering of elements and nodes is such that
+element $i$ is the interval [$x_i,x_{i+1}]$: the first element is [$x_1,x_2]$,
+the second element is [$x_2,x_3]$, and so on.
+Assume also that the approximate solution on element $i$, $d_i^n(x;\theta)$,
+satisfies $d_i^n(x_i)=\theta_i$ and $d_i^n(x_{i+1})=\theta_{i+1}$. In
+other words, assume that the
+undetermined coefficients represent the solution at the nodes.
+The approximation of $d$ on element $i$, $d_i^n$, 
+is therefore uniquely given by 
+
+$$\begin{equation}
+    d_i^n(x;\theta) = \theta_i \psi_i(x)  + \theta_{i+1} \psi_{i+1}(x), \quad
+    x\in [x_i,x_{i+1}],
+\end{equation}$$
+
+where the basis functions are given by equation
+(\ref{linear fem bases}) and drawn in Figure 2.
+Since elements are connected to each other at nodal points on the
+element boundaries, this choice of basis functions guarantees
+that the approximation is continuous across elements.
+Notice also that any linear function (and, hence, any continuous
+piecewise linear $d^n$) can be represented with the basis functions
+given in (\ref{linear fem bases}).
+
+Let the approximate solution to (\ref{simple functional})
+be of the form
+\begin{equation}
+d^n(x;\theta) = \sum_{i=1}^n \theta_i \psi_i(x),  
+\end{equation}
+with $\psi_i(x)$, $i=1,\ldots, n$ given by (\ref{linear fem bases}).
+To impose the boundary condition $d^n(0;\theta)=1$, we need
+to set $\theta_1$ to one. 
+Let's apply a Galerkin method. Therefore, the weight functions are
+given by the bases $\psi_i(x)$, $i=1,\ldots, n$.
+
+Suppose that there are three elements with nodes
+at 0, 1, 3, and 6.  
+Then the residual equation is given by
+\begin{align}
+    R(x;\theta) &= \sum_{i=1}^4 \theta_i(\psi_i'(x) +\psi_i(x))\\
+                   \noalign{\medskip}
+                &=\begin{cases}
+                     \theta_1\,(-x) +\theta_2\,(1+x)  & \text{if}\ x\in [0,1]\\
+                     \noalign{\medskip}
+                     \theta_2\,(1\,-{1\over 2}x)+\theta_3\,({1\over 2}x)  & \text{if}\ x\in [1,3]\\
+                     \noalign{\medskip}
+                     \theta_3\,({5\over 3}-{1\over 3}x) +\theta_4\,(-{2\over 3}+{1\over 3}x)  & \text{if}\ x\in [3,6].
+                  \end{cases}
+\label{three element residual}
+\end{align}
+If we substitute the residual (\ref{three element residual}) into the weighted
+integral (\ref{weighted integral})
+with $\phi_i(x)=\psi_i(x)$, then we get the following 
+system of equations:
+
+$$\begin{align}
+      \Biggl\{      &\int_0^1
+                     \begin{bmatrix}
+                                  1-x\\
+                               \noalign{\smallskip}
+                                   x\\
+                               \noalign{\smallskip}
+                                   0\\
+                               \noalign{\smallskip}
+                                   0
+                     \end{bmatrix}
+                     \begin{bmatrix}
+                         -x & 1+x & 0 & 0
+                     \end{bmatrix}\, dx \\
+                      \noalign{\bigskip} 
+                          +&\int_1^3
+                     \begin{bmatrix}
+                                0\\
+                               \noalign{\medskip}
+                           \phantom{-}{3\over 2}-{1\over 2}x\\
+                               \noalign{\medskip}
+                                  -{1\over 2}+{1\over 2}x\\
+                               \noalign{\smallskip}
+                                   0
+                     \end{bmatrix}
+                     \begin{bmatrix}
+                              0 & 1-{1\over 2}x & {1\over 2}x & 0
+                     \end{bmatrix}\,dx  \\
+                      \noalign{\bigskip} 
+                          +&\int_3^6
+                     \begin{bmatrix}
+                                   0\\
+                               \noalign{\smallskip}
+                                   0\\
+                               \noalign{\medskip}
+                                  \phantom{-}2-{1\over 3}x\\
+                               \noalign{\medskip}
+                                  -1+{1\over 3}x 
+                     \end{bmatrix}
+                     \begin{bmatrix}
+                               0 & 0 & {5\over 3}-{1\over 3}x & -{2\over 3}+{1\over 3}x
+                     \end{bmatrix}\,dx \Biggr\}
+                 \begin{bmatrix}
+                      1\\ \theta_2\\ \theta_3 \\ \theta_4
+                 \end{bmatrix}
+                  = \begin{bmatrix}
+                           0\\ 0\\ 0\\ 0
+                    \end{bmatrix},
+\end{align}$$
+
+or if we compute the integrals, 
+
+$$\begin{equation}
+    \begin{bmatrix}
+       \hfill -1/6& \hfill  2/3& \hfill   0& \hfill   0\\
+       \noalign{\smallskip}
+       \hfill -1/3& \hfill    1& \hfill 5/6& \hfill   0\\
+       \noalign{\smallskip}
+       \hfill    0& \hfill -1/6& \hfill 5/3& \hfill   1\\
+       \noalign{\smallskip}
+       \hfill    0& \hfill    0& \hfill   0& \hfill 3/2
+    \end{bmatrix}
+    \begin{bmatrix}
+        1\\ \theta_2\\ \theta_3 \\ \theta_4 
+    \end{bmatrix}
+    = \begin{bmatrix}
+        0\\ 0\\ 0\\ 0
+      \end{bmatrix}.  \tag{system for three elements}
+\end{equation}$$
+
+Note that we need to drop the first equation because we have
+to impose that $\theta_1$ = 1 for the boundary condition to be 
+satisfied.
+Recall that the integral equation can be written
+as in (\ref{weighted integral}), where in this case, 
+$w(x)=\sum_i \omega_i \psi_i(x)$.  
+The function $w(x)$ must satisfy the homogeneous counterpart of the
+boundary condition $d(0)=1$, that is, $w(0) = 0$. For those familiar
+with the calculus of variations, $w$ is
+like the variation of the solution and thus must satisfy the
+homogeneous counterparts of boundary conditions for $d$. Enforcing the
+condition $w(0)=0$ is equivalent to dropping the first equation in 
+(\ref{system for three elements}).
+Therefore, the system of equations reduces to
+
+$$\begin{equation}
+   \begin{bmatrix}
+       \hfill    1& \hfill 5/6& \hfill   0\\
+       \noalign{\smallskip}
+       \hfill -1/6& \hfill 5/3& \hfill   1\\
+       \noalign{\smallskip}
+       \hfill    0& \hfill   0& \hfill 3/2 
+   \end{bmatrix}
+       \begin{bmatrix}
+           \theta_2\\ \theta_3\\ \theta_4 
+       \end{bmatrix}
+                  = 
+       \begin{bmatrix}
+            \hfill 1/3\\ \hfill 0\\ \hfill 0
+       \end{bmatrix},
+\end{equation}$$
+
+with three equations and three unknowns.
+In Figure 7 of the chapter, I plot the finite element approximation
+and the exact solution. By construction, the approximate function
+is piecewise linear.  
+
+What is involved if we instead apply the method to the simplest
+deterministic growth model with inelastic labor?  In that case, the
+decision function is consumption $c^n(k;\theta)$ and
+the residual is
+
+$$\begin{align}
+  R(k;\theta) &= 1-\beta \frac{ U(c^n(F(k)+(1-\delta)k-c^n(k;\theta)))}
+                              {U(c^n(k;\theta))}\\
+\noalign{\smallskip}
+              & \qquad\qquad \qquad \cdot  (F_k(F(k)+(1-\delta)k-c^n(k;\theta))+1-\delta).
+\end{align}$$
+
+Unlike the problem above, the final set of equations will not turn out
+to be linear but the procedure up to the point of setting up the
+problem is no different.  The weighted residuals are then given by 
+
+$$\begin{equation}
+  \int \psi_i(k) R(k;\theta)dk = 0
+\end{equation}$$
+
+for $i=1,\ldots,n$, which can be stacked into a system of equations in
+the vector of unknowns $\vec \theta = [\theta_1,\ldots,\theta_n]'$:
+
+$$\begin{equation}
+   G(\vec\theta) = 0
+\end{equation}$$
+
+where $G$ is $n$ dimensional.
+From here, a Newton update can be applied:
+
+$$\begin{equation}
+  \vec\theta^{j+1} = \vec\theta^j-\left[ {\partial G(\vec\theta)\over \partial \vec\theta}|_{\vec \theta=\vec\theta^j}\right]^{-1} G(\vec\theta^j)
+\end{equation}$$
+
+starting from a guess of $\vec\theta^0$ based on our linear 
+or log-linear approximations.
+
+
+
+"""
+
+# ╔═╡ 53333333-3333-5333-8333-333333333333
+md"""
+## Solving the Growth Model with the Finite Element Method
+
+### Deterministic growth model
+
+At each date $t$, consumption, $c_t$, and investment, $x_t$,
+are chosen to maximize the present value of discounted utility
+subject to the resource constraint and the definition of 
+investment:
+
+$$\begin{align}
+\sum_{t=0}^{\infty} & \beta^t\, u(c_t) \\
+     {\rm subject\ to\ }  & c_t + x_t = f(k_t)\\
+                          & x_t = k_{t+1} - (1-\delta) k_t
+\end{align}$$
+
+given initial capital $k_0$ and specifications for 
+utility $u(\cdot)$, production $f(\cdot)$, and parameters $\beta$ 
+and $\delta$.
+
+This problem is well suited for the finite element method 
+(and other weighted residual methods) used to solve 
+functional equations. Suppose we use the intratemporal
+first-order condition as the functional equation of interest
+and compute an approximate consumption function.
+In this case, the functional equation we want to solve is
+\begin{equation}
+     F(c)(k) = \beta \frac{u'(c( f(k)+(1-\delta)k-c(k))}{u'(c(k))} f'(f(k)+(1-\delta)k-c(k))-1 = 0
+\end{equation}
+over the state space $\Omega=[0,\bar k]$, where $\bar k$ is 
+the maximal capital stock used when approximating the consumption
+function (and not necessarily the feasible maximum).
+When applying the finite element method, we need to specify non-overlapping
+``elements'' over the domain. In the case of one-dimensional approximations,
+the elements are simply non-overlapping intervals on $\Omega$.
+
+The approximate consumption function is given by a weighted sum
+of basis functions:
+
+$$\begin{equation}
+   c^n(k;\Theta) =  \sum_{l=1}^n \theta_l \psi_l(k)
+\end{equation}$$
+
+and depends on unknown coefficients $\Theta=[\theta_1,\theta_2,\ldots,\theta_n]'$
+of the known basis functions $\psi_l(k)$, $l=1,\ldots,n$.  For simplicity, we will use
+linear bases: 
+
+$$\begin{equation}
+   \psi_l(k) =  
+    \begin{cases}
+        {k-k_{l-1}\over k_l-k_{l-1}} & \text{if}\ k\in [k_{l-1},k_l] \\
+        \noalign{\bigskip}
+        {k_{l+1}-k\over k_{l+1}-k_l} & \text{if}\ k\in [k_l,k_{l+1}] \\
+        \noalign{\medskip}
+        0        & \text{elsewhere}.
+   \end{cases}
+\tag{linear fem bases}
+\end{equation}$$
+
+that imply the approximation is piecewise linear
+with $c^n(k_l)=\theta_l$ at nodes $k_l$.
+Applying a weighted residual method in this case means
+finding $\Theta$ that satisfy
+\begin{equation}
+   \int_{\Omega} \omega(k) R(k;\Theta) = 0
+\end{equation}
+where $R(k;\Theta) = F(c^n(k;\Theta))$
+and $\omega(k)$ is a weighting  function that is
+also assumed to be a linear sum of the
+basis functions above, that is 
+\begin{equation}
+   \omega(k) = \sum_{l=1}^n \varpi_l \psi_l(k)
+\end{equation}
+with coefficient parameters $\varpi_l$, $l=1,\ldots,n$
+and basis functions defined over $\Omega$ as above.
+To set the weighted residual equal to zero for any 
+arbitrary weights $\varpi_l$, it must be the
+case that the following is true:
+
+$$\begin{equation}
+   \int_{k_{l-1}}^{k_{l}} \left(\frac{k-k_{l-1}}{k_l-k_{l-1}}\right) R(k;\Theta) 
+        + \int_{k_{l}}^{k_{l+1}}\left( \frac{k_{l+1}-k}{k_{l+1}-k_l}\right)  R(k;\Theta) =0
+\tag{weighted residual}
+\end{equation}$$
+
+for $i=2,\ldots,n-1$ and, if there are no boundary conditions
+imposed at the endpoints of the domain, then we add:
+
+$$\begin{equation}
+   \int_{k_1}^{k_2} \left(\frac{k_{2}-k}{k_2-k_1}\right)  R(k;\Theta) =0,\quad
+   \int_{k_{n-1}}^{k_n} \left(\frac{k-k_{n-1}}{k_{n}-k_{n-1}}\right) R(k;\Theta) =0.
+\end{equation}$$
+
+to the system of equations when solving for the elements
+of the vector $\Theta$.
+
+Suppose we set $u(c)= [c^{1-\mu}-1]/(1-\mu)$ and $f(k)=Ak^\alpha$.
+The residual in this case is 
+
+$$\begin{align}
+   R(k;\Theta) &= \beta \frac{c^n(\tilde k;\Theta)^{-\mu}}{c^n(k;\Theta)^{-\mu}} (\alpha A \tilde k^{\alpha-1} 
+                          + 1-\delta)-1\\
+     \bigskip
+               &= \beta \frac{(\sum_l\theta_l\psi_l(\tilde k))^{-\mu}}{(\sum_l\theta_l\psi_l(k))^{-\mu}} (\alpha A \tilde k^{\alpha-1} 
+                          + 1-\delta)-1, 
+\end{align}$$
+
+where $\tilde k=Ak^\alpha+(1-\delta)k-\sum_l\theta_l\psi_l(k)$.
+Since we are working with piecewise linear bases, we can
+evaluate this residual locally on the element containing $k$.
+Note that it may be the case that $\tilde k$ is located on another
+element.  That means the sums $\sum_l \theta_l \psi_l(k)$
+and $\sum_l\theta_l \psi_l(\tilde k)$ will be different and the particular
+$\theta_l$ unknowns that are multiplying non-zero bases will be different.
+Even if $k$ and $\tilde k$ are located on the same element, the 
+values for consumption will differ if $k\neq\tilde k$.
+
+### Stochastic growth model
+
+Next, consider constructing the residual if productivity is stochastic.
+The problem is the same as above except the households solve the
+expected lifetime consumption and the productivity $A$
+is now stochastic. Consider two Markovian specifications
+for productivity. The first is a Markov chain with $I$ states:
+
+$$\begin{equation}
+   \Pi_{i,j} =Pr[A_{t+1}=A(j)|A_t=A(i)]
+\end{equation}$$
+
+for $i=1,\ldots,I$ and $j=1,\ldots,I$.
+The second is the autoregressive process:
+
+\begin{equation}
+   \log A_{t+1} = \rho \log A_t + \epsilon_{t+1},
+\tag{ar1}
+\end{equation}
+
+where $\epsilon_t\sim N(0,\sigma^2)$. 
+
+The residual when productivity is a Markov chain is given by:
+
+$$\begin{equation}
+R(k,i;\Theta) = \beta \sum_{j=1}^I\Pi_{i,j}\, \frac{c^n(\tilde k,j;\Theta)^{-\mu}}{c^n(k,i;\Theta)^{-\mu}}
+           (\alpha A(j)\tilde k^{\alpha-1}+1-\delta)-1,
+\end{equation}$$
+
+where $\tilde k = A(i) k^\alpha + (1-\delta)k-c^n(k,i;\Theta)$ and
+
+$$\begin{equation}
+   c^n(k,i) = \sum_{l=1} \theta_l^i \psi_l(k).
+\end{equation}$$
+
+We can use the same approximation for consumption as above.  If we set $I=1$,
+we have the same residual as in the deterministic growth model.
+
+When productivity is a continuous autoregressive process, 
+we need to figure out how to deal with the 
+fact that $\log A$ is in the range [$-\infty,\infty]$.
+One simple ``fix'' is to make a change of variables, for example, let 
+
+$$\begin{align} 
+  z_t &= {\rm tanh}(a_t)\\
+      &= \frac{\exp(a_t)- \exp(-a_t)}{\exp(a_t)+\exp(-a_t)}
+\end{align}$$ 
+
+where tanh is the hyperbolic tangent function with 
+a range [$-1,1$].
+If we invert this function, we get $A_t=\sqrt{(1+z_t)/(1-z_t)}$
+and equation (\ref{ar1}) can be replaced by
+
+$$\begin{equation}
+   z_{t+1}= {\rm tanh}(\rho {\rm tanh}^{-1}(z_t) + \epsilon_{t+1}).
+\end{equation}$$
+
+Once we have mapped the productivity process, we can
+define the consumption function on a domain
+$\Omega=[0,\bar k] \times [-1,1]$.
+Imagine that we carve this two-dimensional space up into non-overlapping 
+rectangles. In the two-dimensional space, these rectangles are the
+``elements'' analagous to the intervals we were using above.
+If we continue with the simple piecewise linear bases---or
+in this case, piecewise \emph{bilinear} bases---then we would construct
+two-dimensional bases on rectangles around node $(i,j)$ as follows:
+
+$$\begin{equation}
+   \psi_{i,j}(k,z) = \begin{cases}
+      \frac{k-k_{i-1}}{k_i-k_{i-1}} 
+        \cdot \frac{z-z_{j-1}}{z_j-z_{j-1}} & \text{if}\ k\in [k_{i-1},k_i],
+                                                         z\in [z_{j-1},z_j]\\
+        \noalign{\medskip}
+      \frac{k_{i+1}-k}{k_{i+1}-k_i} 
+        \cdot \frac{z-z_{j-1}}{z_j-z_{j-1}} & \text{if}\ k\in [k_i,k_{i+1}],
+                                                         z\in [z_{j-1},z_j]\\
+        \noalign{\medskip}
+      \frac{k-k_{i-1}}{k_i-k_{i-1}} 
+        \cdot \frac{z_{j+1}-z}{z_{j+1}-z_j} & \text{if}\ k\in [k_{i-1},k_i],
+                                                         z\in [z_j,z_{j+1}]\\
+        \noalign{\medskip}
+      \frac{k_{i+1}-k}{k_{i+1}-k_i} 
+        \cdot \frac{z_{j+1}-z}{z_{j+1}-z_j} & \text{if}\ k\in [k_i,k_{i+1}], 
+                                                         z\in [z_j,z_{j+1}]\\
+        \noalign{\medskip}
+      0        & \text{elsewhere}.
+     \end{cases}
+\tag{bilinear fem bases}
+\end{equation}$$
+
+The approximate consumption function in this case is
+
+$$\begin{equation}
+   c^n(k,z) = \sum_{i,j} \theta_{i,j} \psi_{i,j}(k,z).
+\end{equation}$$
+
+Now that we have a set of bases for $c^n$, we can write the residual function
+for the two-dimensional stochastic growth model as follows:
+
+$$\begin{equation}
+R(k,z;\Theta) = \beta \int_{-\infty}^\infty
+\frac{c^n(\tilde k,\tilde z)^{-\mu}}{c^n(k,z)^{-\mu}}
+ \left(\alpha \sqrt{{1+\tilde z\over 1-\tilde z}}\tilde k^{\alpha-1}
+    +1-\delta\right)\frac{e^{-\nu^2}}{\sqrt{\pi}} \, d\nu -1
+\label{twodim}
+\end{equation}$$
+
+where $\nu_t=\epsilon_t/(\sqrt{2}\sigma)$, which is distributed $N(0,1/2)$
+and has density $\exp(-\nu^2)/\sqrt{\pi}$.
+Replacing $\epsilon$ by $\nu$ makes it very convenient to
+compute the expected value in the Euler equation with a standard Gaussian quadrature method.
+Specifically, we can use the fact that 
+
+$$\begin{equation}
+    \int^{\infty}_{-\infty} e^{-\nu^2} g(\nu) d\nu 
+        \approx \sum_{\ell=1}^m \omega_\ell g(\nu_\ell),
+\end{equation}$$
+
+where the values of $\nu_ell$ are roots of a $m^{\rm th}$ order polynomial, $H_m(x)$,
+from the Hermite class and $\omega_{\ell}= 2^{m-1}m!\sqrt{\pi}/(m^2 [H_{m-1}(\nu_{\ell})]^2)$.
+Given this result, we can rewrite the residual as:
+
+$$\begin{equation}
+R(k,z;\Theta) \simeq \frac{\beta}{\sqrt{\pi}} \sum_{\ell=1}^{m} 
+                \frac{c^n(\tilde k,\tilde z_{\ell})^{-\mu}}{c^n(k,z)^{-\mu}} 
+                \left(\alpha\tilde k^{\alpha-1}
+                      \sqrt{1+\tilde z_{\ell}\over 1-\tilde z_{\ell}}
+                       +1-\delta\right) \omega_{\ell}-1,
+\end{equation}$$
+
+where $\tilde z_{\ell}= {\rm tanh}(\rho\, {\rm tanh}^{-1}(z)+\sqrt{2}\sigma\nu_{\ell})$.
+
+Once we have the residual function---whether we are solving a one-dimensional problem,
+many one-dimensional problems, or a two-dimensional problem---we can use what
+we learned earlier about mapping elements to a ``master element'' and writing
+a standard function to fill in elements of the Jacobian matrix for the non-linear
+system equations arising from choosing $\Theta$ that sets the weighted
+residual to 0. In the case of 
+In the case of one-dimensional piecewise linear approximations, we have
+
+$$\begin{equation}
+c^n_e(\xi,i) = {\scriptstyle{1\over 2}}(1-\xi)\, \theta_{\scriptscriptstyle 1,e}^i+ 
+               {\scriptstyle{1\over 2}}(1+\xi)\, \theta_{\scriptscriptstyle 2,e}^i
+\end{equation}$$
+
+on element $e$, where $\theta_{\scriptscriptstyle 1,e}^i$ and
+$\theta_{\scriptscriptstyle 2,e}^i$ are the coefficients related to the 
+first and second node on element $e$, respectively, in the case that
+the productivity level is $A(i)$.
+In the case of two-dimensional piecewise bilinear approximations, we have
+to map from $[k_i,k_{i+1}]$ $\times$ $[z_j,z_{j+1}]$
+ to the master element that we will assign to $[-1,1]$ $\times$ $[-1,1]$.
+In this case, $\xi(k)=(2k-k_i-k_{i+1})/(k_{i+1}-k_i)$ and 
+$\eta(z)= (2z-z_j-z_{j+1})/(z_{j+1}-z_j)$. We then work with:
+
+$$\begin{align}
+c^n_e(\xi,\eta) =\  &\frac{1}{4} (1-\xi)(1-\eta)\, 
+                    \theta_{\scriptscriptstyle 1,e}
+                  +\frac{1}{4} (1+\xi)(1-\eta)\, 
+                    \theta_{\scriptscriptstyle 2,e}\cr
+                  +&\frac{1}{4} (1+\xi)(1+\eta)\, 
+                    \theta_{\scriptscriptstyle 3,e}
+                  +\frac{1}{4} (1-\xi)(1+\eta)\, 
+                    \theta_{\scriptscriptstyle 4,e},
+\end{align}$$
+
+where $\theta_{\scriptscriptstyle l,e}$ is the coefficient
+for the $l^{\rm th}$ node on element $e$.
+
+\end{document}
+
+
+
+
+"""
+
+
+# ╔═╡ 77777777-7777-4777-8777-777777777777
+# Adjust notebook width for lecture notes.
+HTML("""
+<style>
+  main {
+    max-width: 58vw !important;
+    margin-right: 25vw !important;
+  }
+</style>
+""")
+
+
+
+
+
+# ╔═╡ 3d63c66c-b5dd-11f1-b766-338e58c22c81
+md"""
+## The Kalman Filter
+
+The Kalman filter is a recursive algorithm for estimating a latent
+state vector at a particular point in time based on data that has been 
+observed up to that point. An example that will be relevant
+here is the state vector taken as given by
+households or firms when solving their optimization problems, but 
+unobserved by the economist. The filter is used when 
+estimating parameters for a dynamic model.
+
+When deriving the Kalman Filter, it helps to remember two useful
+expressions. Suppose that $X$ and $Y$ are jointly normal random
+variables with means $\bar X$ and $\bar Y$, respectively.
+Let the variance-covariance matrix be denoted by $\Sigma$, where
+
+$$\begin{equation}
+\Sigma = \begin{bmatrix} \Sigma_{XX} & \Sigma_{XY} \\ \Sigma_{YX} & \Sigma_{YY} \end{bmatrix}.
+\end{equation}$$
+
+In this case,  the conditional expectation of $X$ given $Y$ is
+
+$$\begin{equation}
+  E [X|Y] = \bar X + \Sigma_{XY} \Sigma_{YY}^{-1} (Y-\bar Y) \tag{mean} 
+\end{equation}$$
+
+and the conditional variance is
+
+$$\begin{equation}
+  {\rm Var}[X|Y] = E[(X-E(X|Y))^2|Y] = \Sigma_{XX} - \Sigma_{XY}\Sigma_{YY}^{-1} \Sigma_{YX}.\tag{var}
+\end{equation}$$
+
+Below, we will use these formulas to construct means
+and variances of a prediction of latent state variables.
+
+Next, assume that we have a {\it state space system}
+as follows:
+
+$$\begin{align}
+   x_t & = A x_{t-1} + \eta_t \tag{transition}\\
+    y_t & = C x_t + \epsilon_t \tag{measurement}
+\end{align}$$
+
+where $x$ and $\eta$ are $n\times 1$ vectors, $A$ is $n\times n$,
+$y$ and $\epsilon$ are $m\times 1$ vectors, $C$ is $m\times n$, 
+$E\eta_t=0$, $E\eta_t\eta_t'=Q$, $E\epsilon_t=0$, 
+$E\epsilon_t\epsilon_t'=R$, and $E\epsilon_t\eta_s=0$ for all $t$, and
+$s$. The variables in $x_t$ are unobserved and need to be estimated
+and the variables in $y_t$ are observed and will be used to construct
+estimates.  Equation (\ref{transition}) is the transition equation for the 
+unobserved state vector and (\ref{measurement}) is the measurement or
+observer equation. 
+
+The ultimate goal here is to estimate parameters of the 
+model.  To do this, we will convert the system in (\ref{transition})-(\ref{measurement})
+to:
+
+$$\begin{align}
+  \hat x_{t+1|t} &= A \hat x_{t|t-1} + K_t v_t \\
+   y_t &= C \hat x_{t|t-1} + v_t
+\end{align}$$
+
+where $\hat x_{t|t-1}$ is an estimate of the unobserved state vector:
+
+$$\begin{equation}
+  \hat x_{t|t-1} = E[x_t| y_0,y_1,\ldots, y_{t-1}] 
+\end{equation}$$
+
+and $v_t$ is an {\it innovation}, which is the difference between the vector
+of observables and a forecast of that vector. The matrix $K_t$ is the {\it Kalman gain},
+which will be derived below.  To estimate parameters, we need a time
+series for the innovations and an estimate of its variance-covariance matrix.
+In other words, we want estimates of parameters that make these errors small.
+Those estimates will be most ``likely'' to have generated the sequence of
+$\{y_t\}$ that we observe.
+
+To get the sequence of innovations, we compute a sequence of recursions.
+Suppose at time $t$ that we have an estimate of 
+
+$$\begin{equation}
+\hat x_{t-1|t-1}= E[ x_{t-1}|y_0,y_1,...,y_{t-1}]
+\end{equation}$$
+
+and the estimation error for $x_{t-1}$ is  $\Sigma_{t-1}$:
+
+$$\begin{equation}
+  \Sigma_{t-1|t-1} = E [(x_{t-1}-\hat  x_{t-1|t-1})( x_{t-1}-\hat x_{t-1|t-1})'].
+\end{equation}$$
+
+Given $\hat x_{t-1|t-1}$ and $\Sigma_{t-1|t-1}$, we can estimate $ x_t$
+using (\ref{transition}):
+
+$$\begin{equation}
+  \hat x_{t|t-1} = A \hat  x_{t-1|t-1} \tag{update}
+\end{equation}$$
+
+which is a function of the lagged observations.
+The variance of the prediction error is
+
+$$\begin{align}
+  \Sigma_{t|t-1} &= E [(x_t-\hat  x_{t|t-1})( x_t-\hat x_{t|t-1})']\nonumber \\
+            &= E [(Ax_{t-1}+\eta_t-A\hat x_{t-1|t-1})(A x_{t-1}+\eta_t-A\hat x_{t-1|t-1})']\nonumber \\
+            &= E [(A(x_{t-1}-\hat x_{t-1|t-1})+\eta_t)(A( x_{t-1}-\hat x_{t-1|t-1})+\eta_t)']\nonumber \\
+            &= AE [(x_{t-1}-\hat x_{t-1|t-1})( x_{t-1}-\hat x_{t-1|t-1})']A'+E\eta_t\eta_t'\nonumber \\
+            &= A\Sigma_{t-1|t-1}A'+Q, \label{Sigma}
+\end{align}$$
+
+which follows from the fact that $\eta_t$ is not correlated with $x_{t-1}-\hat x_{t-1|t-1}$.
+
+Next, consider updating these equations after observing $y_t$.  In other words,
+we update the current expectation $E[x_t|y_0,y_1,...,y_{t-1}]$ to $E[ x_t|y_0,y_1,....,y_t]$.
+The best estimate for $y_t$ given $x_{t|t-1}$ is
+
+$$\begin{equation}
+   \hat y_{t|t-1} = C \hat x_{t|t-1}
+\end{equation}$$
+
+with the estimation error being the innovation we seek:
+
+$$\begin{equation}
+    v_t = y_t -\hat y_{t|t-1} = C(x_t-\hat  x_{t|t-1}) + \epsilon_t.  \tag{innovation}
+\end{equation}$$
+
+The variance of this innovation is given by
+
+$$\begin{align}
+    \Omega_t & = E v_tv_t'\nonumber \\
+        & = E [ (C(x_t-\hat x_{t|t-1})+\epsilon_t)(C( x_t-\hat x_{t|t-1})+\epsilon_t)']\nonumber \\
+        & = C E [ (x_t-\hat x_{t|t-1})( x_t-\hat x_{t|t-1})']C' +E\epsilon_t\epsilon_t'\nonumber \\
+        & = C \Sigma_{t|t-1} C' +R \tag{innovvar}
+\end{align}$$
+
+and the covariance of the state prediction error and $v_t$:
+
+$$\begin{align}
+   \Psi_t & = E [(x_t-\hat  x_{t|t-1})v_t']\\
+       &  = E [(x_t-\hat x_{t|t-1})(C(x_t-\hat x_{t|t-1})+\epsilon_t)']\\
+       &  = E[(x_t-\hat x_{t|t-1})( x_t-\hat x_{t|t-1})']C'\\
+       &  = \Sigma_{t|t-1}C'.
+\end{align}##
+
+
+We now have everything that we need to apply the formulas in (\ref{mean})
+and (\ref{var}).  Assume that $x$ is like $X$ and $y$ is like $Y$, then 
+the conditional mean is
+
+$$\begin{equation}
+  \underbrace{\hat x_{t|t}}_{E [X|Y]}
+  = 
+  \underbrace{\hat x_{t|t-1}}_{EX} 
+  +\underbrace{\Sigma_{t|t-1}C'}_{\Sigma_{XY}}
+  (\underbrace{C \Sigma_{t|t-1}C'+R}_{\Sigma_{YY}=\Omega_t})^{-1}
+  (y_t -\underbrace{C \hat x_{t|t-1}}_{EY}) \tag{mean2}
+\end{equation}$$
+
+and the conditional variance is
+
+$$\begin{equation}
+  \underbrace{\Sigma_{t|t}}_{{\rm Var}(X|Y)} 
+  = \underbrace{\Sigma_{t|t-1}}_{\Sigma_{XX}}
+  -\underbrace{\Sigma_{t|t-1}C'}_{\Sigma_{XY}}
+  (\underbrace{C \Sigma_{t|t-1}C'+R}_{\Sigma_{YY}})^{-1}
+  \underbrace{C \Sigma_{t|t-1}}_{\Sigma_{YX}}.  \tag{var2}
+\end{equation}$$
+
+The idea here is that the new information in 
+$y_t$---the observed prediction error---is used
+to update the estimate of $x_t$ from $\hat  x_{t|t-1}$
+to $\hat x_t$.
+
+Multiplying both sides of (\ref{mean2}) by $A$, we get
+
+$$\begin{align}
+  \hat x_{t+1|t}
+   &= A\hat x_{t|t-1} +A \Sigma_{t|t-1}C' (C \Sigma_{t|t-1}C'+R)^{-1} v_t\\
+   &= A\hat x_{t|t-1} +K_t v_t
+\end{align}$$
+
+where $K_t$ can also be written more succinctly as
+
+$$\begin{equation}
+  K_t = A\Sigma_{t|t-1}C'\Omega_t^{-1}.
+\end{equation}$$
+
+The Kalman algorithm can now be implemented.  Starting with
+guesses for $x_0$ and $\Sigma_0$, recursively update the estimates
+of the mean and variance of the state using (\ref{update}), (\ref{Sigma}),
+(\ref{mean2}) and (\ref{var2}) (in that order).  Along the way,
+store $v_t$ and $\Omega_t$ using  (\ref{innovation}) and (\ref{innovvar}).
+To compute parameters, we need to maximize the log-likelihood function:
+
+$$\begin{equation}
+  \ln L= \sum_t \{ -{m\over 2} \ln 2\pi-{1\over 2} \ln |\Omega_t| -{1\over 2} 
+     v_t'\Omega_t^{-1}v_t\}.
+\end{equation}$$
+
+The math behind this filter should now be familiar given our
+experience with the Riccati equation.  Notice in particular
+that I can use the expressions in (\ref{var2}) and
+(\ref{Sigma}) to get a recursive formula for $\Sigma_{t+1|t}$:
+
+$$\begin{equation}
+   \Sigma_{t+1|t} = Q+ A  \Sigma_{t|t-1} A' - 
+              A \Sigma_{t|t-1} C' (R+C\Sigma_{t|t-1}C')^{-1}C\Sigma_{t|t-1}A',
+\end{equation}$$
+
+For the steady-state Kalman filter, the algebraic equation becomes:
+
+$$\begin{equation}
+   \Sigma = Q+ A  \Sigma A' - 
+              A \Sigma C' (R+C\Sigma C')^{-1}C\Sigma A'.  \tag{stationary}
+\end{equation}$$
+
+In stationary environments, one can replace $\Sigma_0$
+with the stationary $\Sigma$ that solves (\ref{stationary})
+and set $x_0$ to the unconditional mean of the state vector.
+
+Notice that (\ref{stationary})
+looks exactly like the Riccati equation if we replace
+$A$ by $A'$, $C'$ by $B$, and $\Sigma$ by $P$, that is:
+
+$$\begin{equation}
+  P = Q + A'P A - A'PB(R+B'PB)^{-1} B'PA.
+\end{equation}$$
+
+Why do these recursive formulas look the same? It turns out that maximizing
+the quadratic return function is
+like minimizing the quadratic distance between data
+and model prediction.
+
+
+"""
+
+
+# ╔═╡ 00000000-0000-0000-0000-000000000001
+PLUTO_PROJECT_TOML_CONTENTS = """
+[deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+Measures = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+
+[compat]
+HypertextLiteral = "~0.9.5"
+Measures = "~0.3.3"
+Plots = "~1.41.1"
+PlutoUI = "~0.7.75"
+"""
+
+# ╔═╡ 00000000-0000-0000-0000-000000000002
+PLUTO_MANIFEST_TOML_CONTENTS = """
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.12.7"
+manifest_format = "2.0"
+project_hash = "51dffb5fb81f2cd18601eedb94a4e5d2bf96dae5"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.3.2"
+
+[[deps.AliasTables]]
+deps = ["PtrArrays", "Random"]
+git-tree-sha1 = "9876e1e164b144ca45e9e3198d0b689cadfed9ff"
+uuid = "66dad0bd-aa9a-41b7-9441-69ab47430ed8"
+version = "1.1.3"
+
+[[deps.ArgTools]]
+uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
+version = "1.1.2"
+
+[[deps.Artifacts]]
+uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+version = "1.11.0"
+
+[[deps.Base64]]
+uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+version = "1.11.0"
+
+[[deps.BitFlags]]
+git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
+uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
+version = "0.1.9"
+
+[[deps.Bzip2_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "1b96ea4a01afe0ea4090c5c8039690672dd13f2e"
+uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
+version = "1.0.9+0"
+
+[[deps.Cairo_jll]]
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
+uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
+version = "1.18.5+0"
+
+[[deps.CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.8"
+
+[[deps.ColorSchemes]]
+deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
+git-tree-sha1 = "b0fd3f56fa442f81e0a47815c92245acfaaa4e34"
+uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
+version = "3.31.0"
+
+[[deps.ColorTypes]]
+deps = ["FixedPointNumbers", "Random"]
+git-tree-sha1 = "67e11ee83a43eb71ddc950302c53bf33f0690dfe"
+uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+version = "0.12.1"
+weakdeps = ["StyledStrings"]
+
+    [deps.ColorTypes.extensions]
+    StyledStringsExt = "StyledStrings"
+
+[[deps.ColorVectorSpace]]
+deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Requires", "Statistics", "TensorCore"]
+git-tree-sha1 = "8b3b6f87ce8f65a2b4f857528fd8d70086cd72b1"
+uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
+version = "0.11.0"
+
+    [deps.ColorVectorSpace.extensions]
+    SpecialFunctionsExt = "SpecialFunctions"
+
+    [deps.ColorVectorSpace.weakdeps]
+    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+
+[[deps.Colors]]
+deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
+git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
+uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
+version = "0.13.1"
+
+[[deps.CompilerSupportLibraries_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
+version = "1.3.1+2"
+
+[[deps.ConcurrentUtilities]]
+deps = ["Serialization", "Sockets"]
+git-tree-sha1 = "d9d26935a0bcffc87d2613ce14c527c99fc543fd"
+uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
+version = "2.5.0"
+
+[[deps.Contour]]
+git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
+uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
+version = "0.6.3"
+
+[[deps.DataAPI]]
+git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
+uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
+version = "1.16.0"
+
+[[deps.DataStructures]]
+deps = ["OrderedCollections"]
+git-tree-sha1 = "e357641bb3e0638d353c4b29ea0e40ea644066a6"
+uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+version = "0.19.3"
+
+[[deps.Dates]]
+deps = ["Printf"]
+uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
+version = "1.11.0"
+
+[[deps.Dbus_jll]]
+deps = ["Artifacts", "Expat_jll", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "473e9afc9cf30814eb67ffa5f2db7df82c3ad9fd"
+uuid = "ee1fde0b-3d02-5ea6-8484-8dfef6360eab"
+version = "1.16.2+0"
+
+[[deps.DelimitedFiles]]
+deps = ["Mmap"]
+git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
+uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+version = "1.9.1"
+
+[[deps.DocStringExtensions]]
+git-tree-sha1 = "7442a5dfe1ebb773c29cc2962a8980f47221d76c"
+uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+version = "0.9.5"
+
+[[deps.Downloads]]
+deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
+uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+version = "1.7.0"
+
+[[deps.EpollShim_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "8a4be429317c42cfae6a7fc03c31bad1970c310d"
+uuid = "2702e6a9-849d-5ed8-8c21-79e8b8f9ee43"
+version = "0.0.20230411+1"
+
+[[deps.ExceptionUnwrapping]]
+deps = ["Test"]
+git-tree-sha1 = "d36f682e590a83d63d1c7dbd287573764682d12a"
+uuid = "460bff9d-24e4-43bc-9d9f-a8973cb893f4"
+version = "0.1.11"
+
+[[deps.Expat_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "27af30de8b5445644e8ffe3bcb0d72049c089cf1"
+uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
+version = "2.7.3+0"
+
+[[deps.FFMPEG]]
+deps = ["FFMPEG_jll"]
+git-tree-sha1 = "95ecf07c2eea562b5adbd0696af6db62c0f52560"
+uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
+version = "0.4.5"
+
+[[deps.FFMPEG_jll]]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
+git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
+uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
+version = "8.0.1+0"
+
+[[deps.FileWatching]]
+uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
+version = "1.11.0"
+
+[[deps.FixedPointNumbers]]
+deps = ["Statistics"]
+git-tree-sha1 = "05882d6995ae5c12bb5f36dd2ed3f61c98cbb172"
+uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+version = "0.8.5"
+
+[[deps.Fontconfig_jll]]
+deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
+git-tree-sha1 = "f85dac9a96a01087df6e3a749840015a0ca3817d"
+uuid = "a3f928ae-7b40-5064-980b-68af3947d34b"
+version = "2.17.1+0"
+
+[[deps.Format]]
+git-tree-sha1 = "9c68794ef81b08086aeb32eeaf33531668d5f5fc"
+uuid = "1fa38f19-a742-5d3f-a2b9-30dd87b9d5f8"
+version = "1.3.7"
+
+[[deps.FreeType2_jll]]
+deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
+uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
+version = "2.13.4+0"
+
+[[deps.FriBidi_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "7a214fdac5ed5f59a22c2d9a885a16da1c74bbc7"
+uuid = "559328eb-81f9-559d-9380-de523a88c83c"
+version = "1.0.17+0"
+
+[[deps.GLFW_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll", "libdecor_jll", "xkbcommon_jll"]
+git-tree-sha1 = "b7bfd56fa66616138dfe5237da4dc13bbd83c67f"
+uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
+version = "3.4.1+0"
+
+[[deps.GR]]
+deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Qt6Wayland_jll", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
+git-tree-sha1 = "ee0585b62671ce88e48d3409733230b401c9775c"
+uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+version = "0.73.22"
+
+    [deps.GR.extensions]
+    IJuliaExt = "IJulia"
+
+    [deps.GR.weakdeps]
+    IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+
+[[deps.GR_jll]]
+deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "FreeType2_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt6Base_jll", "Zlib_jll", "libpng_jll"]
+git-tree-sha1 = "7dd7173f7129a1b6f84e0f03e0890cd1189b0659"
+uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
+version = "0.73.22+0"
+
+[[deps.GettextRuntime_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
+git-tree-sha1 = "45288942190db7c5f760f59c04495064eedf9340"
+uuid = "b0724c58-0f36-5564-988d-3bb0596ebc4a"
+version = "0.22.4+0"
+
+[[deps.Ghostscript_jll]]
+deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "38044a04637976140074d0b0621c1edf0eb531fd"
+uuid = "61579ee1-b43e-5ca0-a5da-69d92c66a64b"
+version = "9.55.1+0"
+
+[[deps.Glib_jll]]
+deps = ["Artifacts", "GettextRuntime_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
+git-tree-sha1 = "24f6def62397474a297bfcec22384101609142ed"
+uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
+version = "2.86.3+0"
+
+[[deps.Graphite2_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "8a6dbda1fd736d60cc477d99f2e7a042acfa46e8"
+uuid = "3b182d85-2403-5c21-9c21-1e1f0cc25472"
+version = "1.3.15+0"
+
+[[deps.Grisu]]
+git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
+uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
+version = "1.0.2"
+
+[[deps.HTTP]]
+deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
+git-tree-sha1 = "5e6fe50ae7f23d171f44e311c2960294aaa0beb5"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "1.10.19"
+
+[[deps.HarfBuzz_jll]]
+deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
+git-tree-sha1 = "f923f9a774fcf3f5cb761bfa43aeadd689714813"
+uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
+version = "8.5.1+0"
+
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "179267cfa5e712760cd43dcae385d7ea90cc25a4"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.5"
+
+[[deps.HypertextLiteral]]
+deps = ["Tricks"]
+git-tree-sha1 = "7134810b1afce04bbc1045ca1985fbe81ce17653"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.5"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "0ee181ec08df7d7c911901ea38baf16f755114dc"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "1.0.0"
+
+[[deps.InteractiveUtils]]
+deps = ["Markdown"]
+uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+version = "1.11.0"
+
+[[deps.IrrationalConstants]]
+git-tree-sha1 = "b2d91fe939cae05960e760110b328288867b5758"
+uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
+version = "0.2.6"
+
+[[deps.JLFzf]]
+deps = ["REPL", "Random", "fzf_jll"]
+git-tree-sha1 = "82f7acdc599b65e0f8ccd270ffa1467c21cb647b"
+uuid = "1019f520-868f-41f5-a6de-eb00f4b6a39c"
+version = "0.1.11"
+
+[[deps.JLLWrappers]]
+deps = ["Artifacts", "Preferences"]
+git-tree-sha1 = "0533e564aae234aff59ab625543145446d8b6ec2"
+uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
+version = "1.7.1"
+
+[[deps.JSON]]
+deps = ["Dates", "Logging", "Parsers", "PrecompileTools", "StructUtils", "UUIDs", "Unicode"]
+git-tree-sha1 = "06ea418d0c95878c8f3031023951edcf25b9e0ef"
+uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+version = "1.2.0"
+
+    [deps.JSON.extensions]
+    JSONArrowExt = ["ArrowTypes"]
+
+    [deps.JSON.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
+
+[[deps.JpegTurbo_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "b6893345fd6658c8e475d40155789f4860ac3b21"
+uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
+version = "3.1.4+0"
+
+[[deps.JuliaSyntaxHighlighting]]
+deps = ["StyledStrings"]
+uuid = "ac6e5ff7-fb65-4e79-a425-ec3bc9c03011"
+version = "1.12.0"
+
+[[deps.LAME_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "059aabebaa7c82ccb853dd4a0ee9d17796f7e1bc"
+uuid = "c1c5ebd0-6772-5130-a774-d5fcae4a789d"
+version = "3.100.3+0"
+
+[[deps.LERC_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "aaafe88dccbd957a8d82f7d05be9b69172e0cee3"
+uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
+version = "4.0.1+0"
+
+[[deps.LLVMOpenMP_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "eb62a3deb62fc6d8822c0c4bef73e4412419c5d8"
+uuid = "1d63c593-3942-5779-bab2-d838dc0a180e"
+version = "18.1.8+0"
+
+[[deps.LZO_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "1c602b1127f4751facb671441ca72715cc95938a"
+uuid = "dd4b983a-f0e5-5f8d-a1b7-129d4a5fb1ac"
+version = "2.10.3+0"
+
+[[deps.LaTeXStrings]]
+git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
+uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+version = "1.4.0"
+
+[[deps.Latexify]]
+deps = ["Format", "Ghostscript_jll", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
+git-tree-sha1 = "44f93c47f9cd6c7e431f2f2091fcba8f01cd7e8f"
+uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+version = "0.16.10"
+
+    [deps.Latexify.extensions]
+    DataFramesExt = "DataFrames"
+    SparseArraysExt = "SparseArrays"
+    SymEngineExt = "SymEngine"
+    TectonicExt = "tectonic_jll"
+
+    [deps.Latexify.weakdeps]
+    DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+    SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
+    tectonic_jll = "d7dd28d6-a5e6-559c-9131-7eb760cdacc5"
+
+[[deps.LibCURL]]
+deps = ["LibCURL_jll", "MozillaCACerts_jll"]
+uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
+version = "0.6.4"
+
+[[deps.LibCURL_jll]]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "Zlib_jll", "nghttp2_jll"]
+uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
+version = "8.15.0+0"
+
+[[deps.LibGit2]]
+deps = ["LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
+uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
+version = "1.11.0"
+
+[[deps.LibGit2_jll]]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll"]
+uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
+version = "1.9.0+0"
+
+[[deps.LibSSH2_jll]]
+deps = ["Artifacts", "Libdl", "OpenSSL_jll"]
+uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
+version = "1.11.3+1"
+
+[[deps.Libdl]]
+uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+version = "1.11.0"
+
+[[deps.Libffi_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "c8da7e6a91781c41a863611c7e966098d783c57a"
+uuid = "e9f186c6-92d2-5b65-8a66-fee21dc1b490"
+version = "3.4.7+0"
+
+[[deps.Libglvnd_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll"]
+git-tree-sha1 = "d36c21b9e7c172a44a10484125024495e2625ac0"
+uuid = "7e76a0d4-f3c7-5321-8279-8d96eeed0f29"
+version = "1.7.1+1"
+
+[[deps.Libiconv_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "be484f5c92fad0bd8acfef35fe017900b0b73809"
+uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
+version = "1.18.0+0"
+
+[[deps.Libmount_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "97bbca976196f2a1eb9607131cb108c69ec3f8a6"
+uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
+version = "2.41.3+0"
+
+[[deps.Libtiff_jll]]
+deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
+git-tree-sha1 = "f04133fe05eff1667d2054c53d59f9122383fe05"
+uuid = "89763e89-9b03-5906-acba-b20f662cd828"
+version = "4.7.2+0"
+
+[[deps.Libuuid_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "d0205286d9eceadc518742860bf23f703779a3d6"
+uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
+version = "2.41.3+0"
+
+[[deps.LinearAlgebra]]
+deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
+uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+version = "1.12.0"
+
+[[deps.LogExpFunctions]]
+deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
+git-tree-sha1 = "13ca9e2586b89836fd20cccf56e57e2b9ae7f38f"
+uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+version = "0.3.29"
+
+    [deps.LogExpFunctions.extensions]
+    LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
+    LogExpFunctionsChangesOfVariablesExt = "ChangesOfVariables"
+    LogExpFunctionsInverseFunctionsExt = "InverseFunctions"
+
+    [deps.LogExpFunctions.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    ChangesOfVariables = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
+    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
+
+[[deps.Logging]]
+uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
+version = "1.11.0"
+
+[[deps.LoggingExtras]]
+deps = ["Dates", "Logging"]
+git-tree-sha1 = "f00544d95982ea270145636c181ceda21c4e2575"
+uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
+version = "1.2.0"
+
+[[deps.MIMEs]]
+git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
+uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
+version = "1.1.0"
+
+[[deps.MacroTools]]
+git-tree-sha1 = "1e0228a030642014fe5cfe68c2c0a818f9e3f522"
+uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
+version = "0.5.16"
+
+[[deps.Markdown]]
+deps = ["Base64", "JuliaSyntaxHighlighting", "StyledStrings"]
+uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
+version = "1.11.0"
+
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
+git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.1.9"
+
+[[deps.MbedTLS_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "ff69a2b1330bcb730b9ac1ab7dd680176f5896b8"
+uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
+version = "2.28.1010+0"
+
+[[deps.Measures]]
+git-tree-sha1 = "b513cedd20d9c914783d8ad83d08120702bf2c77"
+uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
+version = "0.3.3"
+
+[[deps.Missings]]
+deps = ["DataAPI"]
+git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
+uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
+version = "1.2.0"
+
+[[deps.Mmap]]
+uuid = "a63ad114-7e13-5084-954f-fe012c677804"
+version = "1.11.0"
+
+[[deps.MozillaCACerts_jll]]
+uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
+version = "2025.11.4"
+
+[[deps.NaNMath]]
+deps = ["OpenLibm_jll"]
+git-tree-sha1 = "9b8215b1ee9e78a293f99797cd31375471b2bcae"
+uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
+version = "1.1.3"
+
+[[deps.NetworkOptions]]
+uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
+version = "1.3.0"
+
+[[deps.Ogg_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "b6aa4566bb7ae78498a5e68943863fa8b5231b59"
+uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
+version = "1.3.6+0"
+
+[[deps.OpenBLAS_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
+version = "0.3.29+0"
+
+[[deps.OpenLibm_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
+version = "0.8.7+0"
+
+[[deps.OpenSSL]]
+deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "NetworkOptions", "OpenSSL_jll", "Sockets"]
+git-tree-sha1 = "1d1aaa7d449b58415f97d2839c318b70ffb525a0"
+uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
+version = "1.6.1"
+
+[[deps.OpenSSL_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
+version = "3.5.6+0"
+
+[[deps.Opus_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "e2bb57a313a74b8104064b7efd01406c0a50d2ff"
+uuid = "91d4177d-7536-5919-b921-800302f37372"
+version = "1.6.1+0"
+
+[[deps.OrderedCollections]]
+git-tree-sha1 = "05868e21324cede2207c6f0f466b4bfef6d5e7ee"
+uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+version = "1.8.1"
+
+[[deps.PCRE2_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
+version = "10.44.0+1"
+
+[[deps.Pango_jll]]
+deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "0662b083e11420952f2e62e17eddae7fc07d5997"
+uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
+version = "1.57.0+0"
+
+[[deps.Parsers]]
+deps = ["Dates", "PrecompileTools", "UUIDs"]
+git-tree-sha1 = "7d2f8f21da5db6a806faf7b9b292296da42b2810"
+uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+version = "2.8.3"
+
+[[deps.Pixman_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
+git-tree-sha1 = "db76b1ecd5e9715f3d043cec13b2ec93ce015d53"
+uuid = "30392449-352a-5448-841d-b1acce4e97dc"
+version = "0.44.2+0"
+
+[[deps.Pkg]]
+deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+version = "1.12.1"
+weakdeps = ["REPL"]
+
+    [deps.Pkg.extensions]
+    REPLExt = "REPL"
+
+[[deps.PlotThemes]]
+deps = ["PlotUtils", "Statistics"]
+git-tree-sha1 = "41031ef3a1be6f5bbbf3e8073f210556daeae5ca"
+uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
+version = "3.3.0"
+
+[[deps.PlotUtils]]
+deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "StableRNGs", "Statistics"]
+git-tree-sha1 = "26ca162858917496748aad52bb5d3be4d26a228a"
+uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
+version = "1.4.4"
+
+[[deps.Plots]]
+deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "Unzip"]
+git-tree-sha1 = "12ce661880f8e309569074a61d3767e5756a199f"
+uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+version = "1.41.1"
+
+    [deps.Plots.extensions]
+    FileIOExt = "FileIO"
+    GeometryBasicsExt = "GeometryBasics"
+    IJuliaExt = "IJulia"
+    ImageInTerminalExt = "ImageInTerminal"
+    UnitfulExt = "Unitful"
+
+    [deps.Plots.weakdeps]
+    FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+    GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+    IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+    ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
+git-tree-sha1 = "db8a06ef983af758d285665a0398703eb5bc1d66"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.75"
+
+[[deps.PrecompileTools]]
+deps = ["Preferences"]
+git-tree-sha1 = "07a921781cab75691315adc645096ed5e370cb77"
+uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+version = "1.3.3"
+
+[[deps.Preferences]]
+deps = ["TOML"]
+git-tree-sha1 = "522f093a29b31a93e34eaea17ba055d850edea28"
+uuid = "21216c6a-2e73-6563-6e65-726566657250"
+version = "1.5.1"
+
+[[deps.Printf]]
+deps = ["Unicode"]
+uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+version = "1.11.0"
+
+[[deps.PtrArrays]]
+git-tree-sha1 = "1d36ef11a9aaf1e8b74dacc6a731dd1de8fd493d"
+uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
+version = "1.3.0"
+
+[[deps.Qt6Base_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Vulkan_Loader_jll", "Xorg_libSM_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_cursor_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "libinput_jll", "xkbcommon_jll"]
+git-tree-sha1 = "34f7e5d2861083ec7596af8b8c092531facf2192"
+uuid = "c0090381-4147-56d7-9ebc-da0b1113ec56"
+version = "6.8.2+2"
+
+[[deps.Qt6Declarative_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6ShaderTools_jll"]
+git-tree-sha1 = "da7adf145cce0d44e892626e647f9dcbe9cb3e10"
+uuid = "629bc702-f1f5-5709-abd5-49b8460ea067"
+version = "6.8.2+1"
+
+[[deps.Qt6ShaderTools_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll"]
+git-tree-sha1 = "9eca9fc3fe515d619ce004c83c31ffd3f85c7ccf"
+uuid = "ce943373-25bb-56aa-8eca-768745ed7b5a"
+version = "6.8.2+1"
+
+[[deps.Qt6Wayland_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6Declarative_jll"]
+git-tree-sha1 = "8f528b0851b5b7025032818eb5abbeb8a736f853"
+uuid = "e99dba38-086e-5de3-a5b1-6e4c66e897c3"
+version = "6.8.2+2"
+
+[[deps.REPL]]
+deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
+uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+version = "1.11.0"
+
+[[deps.Random]]
+deps = ["SHA"]
+uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+version = "1.11.0"
+
+[[deps.RecipesBase]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "5c3d09cc4f31f5fc6af001c250bf1278733100ff"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "1.3.4"
+
+[[deps.RecipesPipeline]]
+deps = ["Dates", "NaNMath", "PlotUtils", "PrecompileTools", "RecipesBase"]
+git-tree-sha1 = "45cf9fd0ca5839d06ef333c8201714e888486342"
+uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
+version = "0.6.12"
+
+[[deps.Reexport]]
+git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
+uuid = "189a3867-3050-52da-a836-e630ba90ab69"
+version = "1.2.2"
+
+[[deps.RelocatableFolders]]
+deps = ["SHA", "Scratch"]
+git-tree-sha1 = "ffdaf70d81cf6ff22c2b6e733c900c3321cab864"
+uuid = "05181044-ff0b-4ac5-8273-598c1e38db00"
+version = "1.0.1"
+
+[[deps.Requires]]
+deps = ["UUIDs"]
+git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
+uuid = "ae029012-a4dd-5104-9daa-d747884805df"
+version = "1.3.1"
+
+[[deps.SHA]]
+uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+version = "0.7.0"
+
+[[deps.Scratch]]
+deps = ["Dates"]
+git-tree-sha1 = "9b81b8393e50b7d4e6d0a9f14e192294d3b7c109"
+uuid = "6c6a2e73-6563-6170-7368-637461726353"
+version = "1.3.0"
+
+[[deps.Serialization]]
+uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+version = "1.11.0"
+
+[[deps.Showoff]]
+deps = ["Dates", "Grisu"]
+git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
+uuid = "992d4aef-0814-514b-bc4d-f2e9a6c4116f"
+version = "1.0.3"
+
+[[deps.SimpleBufferStream]]
+git-tree-sha1 = "f305871d2f381d21527c770d4788c06c097c9bc1"
+uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
+version = "1.2.0"
+
+[[deps.Sockets]]
+uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
+version = "1.11.0"
+
+[[deps.SortingAlgorithms]]
+deps = ["DataStructures"]
+git-tree-sha1 = "64d974c2e6fdf07f8155b5b2ca2ffa9069b608d9"
+uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
+version = "1.2.2"
+
+[[deps.SparseArrays]]
+deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
+uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+version = "1.12.0"
+
+[[deps.StableRNGs]]
+deps = ["Random"]
+git-tree-sha1 = "4f96c596b8c8258cc7d3b19797854d368f243ddc"
+uuid = "860ef19b-820b-49d6-a774-d7a799459cd3"
+version = "1.0.4"
+
+[[deps.Statistics]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "ae3bb1eb3bba077cd276bc5cfc337cc65c3075c0"
+uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+version = "1.11.1"
+weakdeps = ["SparseArrays"]
+
+    [deps.Statistics.extensions]
+    SparseArraysExt = ["SparseArrays"]
+
+[[deps.StatsAPI]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "178ed29fd5b2a2cfc3bd31c13375ae925623ff36"
+uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
+version = "1.8.0"
+
+[[deps.StatsBase]]
+deps = ["AliasTables", "DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
+git-tree-sha1 = "a136f98cefaf3e2924a66bd75173d1c891ab7453"
+uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+version = "0.34.7"
+
+[[deps.StructUtils]]
+deps = ["Dates", "UUIDs"]
+git-tree-sha1 = "cd47aa083c9c7bdeb7b92de26deb46d6a33163c9"
+uuid = "ec057cc2-7a8d-4b58-b3b3-92acb9f63b42"
+version = "2.5.1"
+
+    [deps.StructUtils.extensions]
+    StructUtilsMeasurementsExt = ["Measurements"]
+    StructUtilsTablesExt = ["Tables"]
+
+    [deps.StructUtils.weakdeps]
+    Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+    Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
+
+[[deps.StyledStrings]]
+uuid = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
+version = "1.11.0"
+
+[[deps.SuiteSparse_jll]]
+deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
+uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
+version = "7.8.3+2"
+
+[[deps.TOML]]
+deps = ["Dates"]
+uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+version = "1.0.3"
+
+[[deps.Tar]]
+deps = ["ArgTools", "SHA"]
+uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
+version = "1.10.0"
+
+[[deps.TensorCore]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "1feb45f88d133a655e001435632f019a9a1bcdb6"
+uuid = "62fd8b95-f654-4bbd-a8a5-9c27f68ccd50"
+version = "0.1.1"
+
+[[deps.Test]]
+deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
+uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+version = "1.11.0"
+
+[[deps.TranscodingStreams]]
+git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.11.3"
+
+[[deps.Tricks]]
+git-tree-sha1 = "311349fd1c93a31f783f977a71e8b062a57d4101"
+uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
+version = "0.1.13"
+
+[[deps.URIs]]
+git-tree-sha1 = "bef26fb046d031353ef97a82e3fdb6afe7f21b1a"
+uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+version = "1.6.1"
+
+[[deps.UUIDs]]
+deps = ["Random", "SHA"]
+uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+version = "1.11.0"
+
+[[deps.Unicode]]
+uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+version = "1.11.0"
+
+[[deps.UnicodeFun]]
+deps = ["REPL"]
+git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
+uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
+version = "0.4.1"
+
+[[deps.Unzip]]
+git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
+uuid = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
+version = "0.2.0"
+
+[[deps.Vulkan_Loader_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Wayland_jll", "Xorg_libX11_jll", "Xorg_libXrandr_jll", "xkbcommon_jll"]
+git-tree-sha1 = "2f0486047a07670caad3a81a075d2e518acc5c59"
+uuid = "a44049a8-05dd-5a78-86c9-5fde0876e88c"
+version = "1.3.243+0"
+
+[[deps.Wayland_jll]]
+deps = ["Artifacts", "EpollShim_jll", "Expat_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
+git-tree-sha1 = "96478df35bbc2f3e1e791bc7a3d0eeee559e60e9"
+uuid = "a2964d1f-97da-50d4-b82a-358c7fce9d89"
+version = "1.24.0+0"
+
+[[deps.XZ_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "9cce64c0fdd1960b597ba7ecda2950b5ed957438"
+uuid = "ffd25f8a-64ca-5728-b0f7-c24cf3aae800"
+version = "5.8.2+0"
+
+[[deps.Xorg_libICE_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "a3ea76ee3f4facd7a64684f9af25310825ee3668"
+uuid = "f67eecfb-183a-506d-b269-f58e52b52d7c"
+version = "1.1.2+0"
+
+[[deps.Xorg_libSM_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libICE_jll"]
+git-tree-sha1 = "9c7ad99c629a44f81e7799eb05ec2746abb5d588"
+uuid = "c834827a-8449-5923-a945-d239c165b7dd"
+version = "1.2.6+0"
+
+[[deps.Xorg_libX11_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
+git-tree-sha1 = "b5899b25d17bf1889d25906fb9deed5da0c15b3b"
+uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
+version = "1.8.12+0"
+
+[[deps.Xorg_libXau_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "aa1261ebbac3ccc8d16558ae6799524c450ed16b"
+uuid = "0c0b7dd1-d40b-584c-a123-a41640f87eec"
+version = "1.0.13+0"
+
+[[deps.Xorg_libXcursor_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXfixes_jll", "Xorg_libXrender_jll"]
+git-tree-sha1 = "6c74ca84bbabc18c4547014765d194ff0b4dc9da"
+uuid = "935fb764-8cf2-53bf-bb30-45bb1f8bf724"
+version = "1.2.4+0"
+
+[[deps.Xorg_libXdmcp_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "52858d64353db33a56e13c341d7bf44cd0d7b309"
+uuid = "a3789734-cfe1-5b06-b2d0-1dd0d9d62d05"
+version = "1.1.6+0"
+
+[[deps.Xorg_libXext_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
+git-tree-sha1 = "a4c0ee07ad36bf8bbce1c3bb52d21fb1e0b987fb"
+uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
+version = "1.3.7+0"
+
+[[deps.Xorg_libXfixes_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
+git-tree-sha1 = "75e00946e43621e09d431d9b95818ee751e6b2ef"
+uuid = "d091e8ba-531a-589c-9de9-94069b037ed8"
+version = "6.0.2+0"
+
+[[deps.Xorg_libXi_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll", "Xorg_libXfixes_jll"]
+git-tree-sha1 = "a376af5c7ae60d29825164db40787f15c80c7c54"
+uuid = "a51aa0fd-4e3c-5386-b890-e753decda492"
+version = "1.8.3+0"
+
+[[deps.Xorg_libXinerama_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll"]
+git-tree-sha1 = "a5bc75478d323358a90dc36766f3c99ba7feb024"
+uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
+version = "1.1.6+0"
+
+[[deps.Xorg_libXrandr_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll", "Xorg_libXrender_jll"]
+git-tree-sha1 = "aff463c82a773cb86061bce8d53a0d976854923e"
+uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
+version = "1.5.5+0"
+
+[[deps.Xorg_libXrender_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
+git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
+uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
+version = "0.9.12+0"
+
+[[deps.Xorg_libpciaccess_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "4909eb8f1cbf6bd4b1c30dd18b2ead9019ef2fad"
+uuid = "a65dc6b1-eb27-53a1-bb3e-dea574b5389e"
+version = "0.18.1+0"
+
+[[deps.Xorg_libxcb_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
+git-tree-sha1 = "bfcaf7ec088eaba362093393fe11aa141fa15422"
+uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
+version = "1.17.1+0"
+
+[[deps.Xorg_libxkbfile_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
+git-tree-sha1 = "e3150c7400c41e207012b41659591f083f3ef795"
+uuid = "cc61e674-0454-545c-8b26-ed2c68acab7a"
+version = "1.1.3+0"
+
+[[deps.Xorg_xcb_util_cursor_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_jll", "Xorg_xcb_util_renderutil_jll"]
+git-tree-sha1 = "9750dc53819eba4e9a20be42349a6d3b86c7cdf8"
+uuid = "e920d4aa-a673-5f3a-b3d7-f755a4d47c43"
+version = "0.1.6+0"
+
+[[deps.Xorg_xcb_util_image_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "f4fc02e384b74418679983a97385644b67e1263b"
+uuid = "12413925-8142-5f55-bb0e-6d7ca50bb09b"
+version = "0.4.1+0"
+
+[[deps.Xorg_xcb_util_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll"]
+git-tree-sha1 = "68da27247e7d8d8dafd1fcf0c3654ad6506f5f97"
+uuid = "2def613f-5ad1-5310-b15b-b15d46f528f5"
+version = "0.4.1+0"
+
+[[deps.Xorg_xcb_util_keysyms_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "44ec54b0e2acd408b0fb361e1e9244c60c9c3dd4"
+uuid = "975044d2-76e6-5fbe-bf08-97ce7c6574c7"
+version = "0.4.1+0"
+
+[[deps.Xorg_xcb_util_renderutil_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "5b0263b6d080716a02544c55fdff2c8d7f9a16a0"
+uuid = "0d47668e-0667-5a69-a72c-f761630bfb7e"
+version = "0.3.10+0"
+
+[[deps.Xorg_xcb_util_wm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
+git-tree-sha1 = "f233c83cad1fa0e70b7771e0e21b061a116f2763"
+uuid = "c22f9ab0-d5fe-5066-847c-f4bb1cd4e361"
+version = "0.4.2+0"
+
+[[deps.Xorg_xkbcomp_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxkbfile_jll"]
+git-tree-sha1 = "801a858fc9fb90c11ffddee1801bb06a738bda9b"
+uuid = "35661453-b289-5fab-8a00-3d9160c6a3a4"
+version = "1.4.7+0"
+
+[[deps.Xorg_xkeyboard_config_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xkbcomp_jll"]
+git-tree-sha1 = "00af7ebdc563c9217ecc67776d1bbf037dbcebf4"
+uuid = "33bec58e-1273-512f-9401-5d533626f822"
+version = "2.44.0+0"
+
+[[deps.Xorg_xtrans_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "a63799ff68005991f9d9491b6e95bd3478d783cb"
+uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
+version = "1.6.0+0"
+
+[[deps.Zlib_jll]]
+deps = ["Libdl"]
+uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
+version = "1.3.1+2"
+
+[[deps.Zstd_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "446b23e73536f84e8037f5dce465e92275f6a308"
+uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
+version = "1.5.7+1"
+
+[[deps.eudev_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "c3b0e6196d50eab0c5ed34021aaa0bb463489510"
+uuid = "35ca27e7-8b34-5b7f-bca9-bdc33f59eb06"
+version = "3.2.14+0"
+
+[[deps.fzf_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "b6a34e0e0960190ac2a4363a1bd003504772d631"
+uuid = "214eeab7-80f7-51ab-84ad-2988db7cef09"
+version = "0.61.1+0"
+
+[[deps.libaom_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "371cc681c00a3ccc3fbc5c0fb91f58ba9bec1ecf"
+uuid = "a4ae2306-e953-59d6-aa16-d00cac43593b"
+version = "3.13.1+0"
+
+[[deps.libass_jll]]
+deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "125eedcb0a4a0bba65b657251ce1d27c8714e9d6"
+uuid = "0ac62f75-1d6f-5e53-bd7c-93b484bb37c0"
+version = "0.17.4+0"
+
+[[deps.libblastrampoline_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
+version = "5.15.0+0"
+
+[[deps.libdecor_jll]]
+deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_jll", "Wayland_jll", "xkbcommon_jll"]
+git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
+uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
+version = "0.2.2+0"
+
+[[deps.libdrm_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
+git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
+uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
+version = "2.4.125+1"
+
+[[deps.libevdev_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "56d643b57b188d30cccc25e331d416d3d358e557"
+uuid = "2db6ffa8-e38f-5e21-84af-90c45d0032cc"
+version = "1.13.4+0"
+
+[[deps.libfdk_aac_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "646634dd19587a56ee2f1199563ec056c5f228df"
+uuid = "f638f0a6-7fb0-5443-88ba-1cc74229b280"
+version = "2.0.4+0"
+
+[[deps.libinput_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "eudev_jll", "libevdev_jll", "mtdev_jll"]
+git-tree-sha1 = "91d05d7f4a9f67205bd6cf395e488009fe85b499"
+uuid = "36db933b-70db-51c0-b978-0f229ee0e533"
+version = "1.28.1+0"
+
+[[deps.libpng_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
+git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
+uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
+version = "1.6.54+0"
+
+[[deps.libva_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
+git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
+uuid = "9a156e7d-b971-5f62-b2c9-67348b8fb97c"
+version = "2.23.0+0"
+
+[[deps.libvorbis_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll"]
+git-tree-sha1 = "11e1772e7f3cc987e9d3de991dd4f6b2602663a5"
+uuid = "f27f6e37-5d2b-51aa-960f-b287f2bc3b7a"
+version = "1.3.8+0"
+
+[[deps.mtdev_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "b4d631fd51f2e9cdd93724ae25b2efc198b059b1"
+uuid = "009596ad-96f7-51b1-9f1b-5ce2d5e8a71e"
+version = "1.1.7+0"
+
+[[deps.nghttp2_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
+version = "1.64.0+1"
+
+[[deps.p7zip_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
+version = "17.7.0+0"
+
+[[deps.x264_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "14cc7083fc6dff3cc44f2bc435ee96d06ed79aa7"
+uuid = "1270edf5-f2f9-52d2-97e9-ab00b5d0237a"
+version = "10164.0.1+0"
+
+[[deps.x265_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "e7b67590c14d487e734dcb925924c5dc43ec85f3"
+uuid = "dfaa095f-4041-5dcd-9319-2fabd8486b76"
+version = "4.1.0+0"
+
+[[deps.xkbcommon_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xkeyboard_config_jll"]
+git-tree-sha1 = "a1fc6507a40bf504527d0d4067d718f8e179b2b8"
+uuid = "d8fb68d0-12a3-5cfd-a85a-d49703b185fd"
+version = "1.13.0+0"
+"""
+
+# ╔═╡ Cell order:
+# ╟─11111111-1111-4111-8111-111111111111
+# ╟─66666666-6666-4666-8666-666666666666
+# ╟─22222222-2222-4222-8222-222222222222
+# ╠═44444444-4444-4444-8444-444444444444
+# ╠═7e508426-a228-4962-8a2a-bf456c1c37c9
+# ╠═a61ff7cf-49f0-4a45-88a4-9f4cab7da31d
+# ╠═b61ff7cf-49f0-4a45-88a4-9f4cab7da31d
+# ╠═33333333-3333-5333-8333-333333333333
+# ╠═13333333-3333-5333-8333-333333333333
+# ╠═23333333-3333-5333-8333-333333333333
+# ╠═43333333-3333-5333-8333-333333333333
+# ╠═53333333-3333-5333-8333-333333333333
+# ╠═77777777-7777-4777-8777-777777777777
+# ╠═3d63c66c-b5dd-11f1-b766-338e58c22c81
+# ╟─00000000-0000-0000-0000-000000000001
+# ╟─00000000-0000-0000-0000-000000000002

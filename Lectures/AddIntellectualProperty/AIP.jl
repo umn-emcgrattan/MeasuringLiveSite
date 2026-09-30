@@ -63,6 +63,12 @@ HERE
 md"""
 ## Model Economy
 
+The model economy of Chapter X will need some updates
+before we bring in the IPP.
+
+HERE
+
+
 Consider the simplest version of a model that we could
 match up to these NIPA data---where, by simple, I mean one
 that does not include taxes, different types of capital incomes, or trade.

@@ -50,10 +50,17 @@ plain and inspectable before optimizing or generalizing it.
 
 ```text
 NMA.jl                       user-controlled Pluto write-up
+src/numerical_differentiation.jl general finite-difference routines
+scripts/numerical_differentiation_driver.jl lecture finite-difference example
 src/quadrature.jl            student-readable quadrature implementation
-scripts/quadrature_driver.jl runnable example/check
+scripts/quadrature_driver.jl runnable lecture example/check
 src/autoregressive.jl        student-readable AR(1) Markov approximation
-scripts/autoregressive_driver.jl runnable AR(1) example/check
+scripts/autoregressive_driver.jl runnable lecture AR(1) example/check
+src/root_finding.jl           bisection and Newton routines
+scripts/bisection_driver.jl   runnable lecture bisection example
+scripts/newton_driver.jl      runnable lecture Newton example
+src/dynamic_programming.jl    steady-state and growth-model routines
+scripts/growth_model_driver.jl runnable normalized growth example
 tmp/                         disposable outputs
 ```
 

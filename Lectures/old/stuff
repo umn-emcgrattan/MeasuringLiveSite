@@ -1,0 +1,220 @@
+
+
+Consider an economy populated by a large number
+of infinitely-lived households (dynasties) with
+identical preferences over consumption defined
+as follows
+
+$$\begin{align}
+   u(c_0,c_1,c_2,\ldots) = \sum_{t=0}^\infty \beta^t U(c_t),
+\end{align}$$
+
+where $c_t$ is consumption in period $t$ and parameter
+$\beta$ is the discount factor used to discount
+future consumption. Note that this *additively separable* functional
+form for preference utility will provide a lot of
+tractability when we solve the model below.
+If there are $N$ households at
+all dates, then total consumption is $C_t=Nc_t$.
+Households supply their labor inelastically
+to firms that have a production technology $Y_t=F(K_t,H_t)$
+with a capital input $K_t$ and hours input $H_t$ in period $t$.
+The total hours supplied in any period is equal to $N$
+times the number of hours supplied per household, which is
+constant.  Without loss of generality, we can normalize this
+to 1, that is, set  $H_t=1$ and then output is given by
+$Y_t=F(K_t,1)$.
+
+A benevolent planner has an initial stock of capital
+$K_0$ and chooses total consumption each period to maximize lifetime
+utility of the typical household. Assuming capital depreciates
+at a constant rate $\delta$, the planner is constrained
+each period by the following resource constraint:
+
+$$\begin{align}
+  C_t + K_{t+1} \leq Y_t - (1-\delta) K_t,
+\end{align}$$
+
+which says that consumption plus gross investment,
+$X_t= K_{t+1} -$ $(1-\delta) K_t$, cannot exceed total output
+$Y_t$. To simplify the description of the planner's
+problem, let $f(K_t) = F(K_t,1)+(1-\delta)K_t$.
+Then the planner solves:
+
+$$\begin{align}
+  \max_{\{K_{t+1}\}_{t=0}^\infty}\
+         &  \sum_{t=0}^\infty \beta^t U(f(K_t)-K_{t+1})\\
+      s.t.\ \ & 0\leq K_{t+1}\leq f(K_t)\\
+              & \text{given} K_0>0.
+\end{align}$$
+
+Since we assumed that the utility is additively separable,
+the problem can be stated in terms of functions rather than
+infinite sequences: instead of trying to find $\{K_{t+1}\}_{t=0}^\infty$,
+we are looking for a function $g$ such that
+$K_{t+1}=g(K_t)$ summarizes the optimal plan for the planner.
+To make progress on this,
+consider writing out the objective function as follows:
+
+$$\begin{equation}
+  U(f(k_0)-k_1)+\beta U(f(k_1)-k_2) + \beta^2 U(f(k_2)-k_3)+\ldots
+\end{equation}$$
+
+Then, take the derivative with respect to one of the stocks---specifically,
+$k_{t+1}$---to get
+
+$$\begin{align}
+  0 &= -\beta^t U'(f(K_t)-K_{t+1})+\beta^{t+1} U'(f(K_{t+1})-K_{t+2})f'(K_{t+1})\\
+  0 &= -\beta^t [U'(C_t)-\beta U'(C_{t+1})f'(K_{t+1})]
+\end{align}$$
+
+where the expression in square brackets when set equal to zero is the famous
+*Euler equation*. Consider substituting any candidate solution into
+the Euler equation to get:
+
+$$\begin{equation}
+  U'(f(K_t)-g(K_t)) = \beta U'(f(g(K_t))-g(g(K_t)))f'(g(K_t)),
+\end{equation}$$
+
+which must hold for all periods $t$. Notice that his is a 1-dimensional
+functional equation and solving it once provides an answer to
+the problem at all dates. If we know $U$ and $F$ (and thus $f$),
+then the problem is relatively standard.  Let's consider the
+case of $U(c)=\log c$ and $F(K,H)=K^\theta H^{1-\theta)$. In this
+case $f(K)=K^\theta+(1-\delta)K$. This implies the following
+functional equation (where $t$ is dropped without loss of generality):
+
+$$\begin{equation}
+  \frac{1}{K^\theta+(1-\delta)K-g(K)} = \beta \frac{\theta g(K)^{\theta-1}+1-\delta}
+                                              {g(K)^\theta + (1-\delta) g(K)-g(g(K))}
+\end{equation}$$
+
+Later we will use a standard method called the *finite element method*
+to solve this functional equation
+using classes of functions to approximate $g$ and criteria that ensure
+we have allowed enough flexibility in the function to get the
+left and right hand side of the functional equation sufficiently close.
+
+In the meantime, we can analyze a second functional equation called
+the Bellman equation to find $g$. The Bellman equation is
+a way to recursively summarize the planner's problem
+
+$$\begin{equation}
+    V(K_0) = \max_{K_1} \{U(f(K_0)-K_1) \ \beta V(K_1)\}
+\end{equation}$$
+
+where $V(K_0)$ is equal to the lifetime utility starting with
+$K_0$ and $V(K_1)$ is equal to lifetime utility starting with $K_1$.
+The difference is the utility flow between period 0 and 1.
+This functional equation is defined over the value function $V$
+and can be simplified if we use the first-order condition:
+
+where $V(K_0)$ is equal to the lifetime utility starting with
+$K_0$ and $V(K_1)$ is equal to lifetime utility starting with $K_1$.
+The difference is the utility flow between period 0 and 1.
+This functional equation is defined over the value function $V$
+and can be simplified if we use the first-order condition:
+
+$$\begin{equation}
+    -U'(f(K_0)-K_1) = \beta V'(K_1),
+\end{equation}$$
+
+to substitute for $K_1$ and thus have a functional equation in $V$.
+The simplest solution method involves guessing $V$, deriving the
+optimal $K_1$, and with the right hand side fully known, updating
+the guess for $V$.
+With the right properties on $U(\cdot)$ and $f(\cdot)$
+and $\beta<1$, the iterations will converge.
+
+More specifically, we pick a grid on an interval of the real line,
+say, $[0,\bar K]$, where $\bar K$ is a value that is high enough
+to be rarely chosen.  For practical reasons, we do not choose
+something so high as to be never feasible because we end
+up trying to solve the problem in a domain that is not economically
+relevant.  A good rule of thumb is to choose $\bar K$ equal to
+a multiple of 2 or 3 times the steady state value. The steady
+state value is $K_{ss}$ that satisfies $K_{ss}=g(K_{ss})$ and thus
+can be found by solving $\beta f'(K_{ss})=1$. This follows from
+the fact that in the steady state $C_t=C_{t+1}$ and therefore,
+$U'(C_t)=U'(C_{t+!}$ and these terms cancel in the Euler
+equation above. If the production technology is of Cobb-Douglas
+form with capital share $\theta$, then we have the following
+steady state capital stock:
+
+$$\begin{equation}
+    K_{ss}= \left(\frac{\beta \theta}{1-\beta(1-\delta)}\right)^{\frac{1}{1-\theta}}
+\end{equation}$$
+
+As a check, set $\beta=1$ so there is no discounting of the future and
+$\delta=1$ so capital fully depreciates each period. Since $Y_{ss}=K_{ss}^\theta$,
+that means that the capital-output ratio---and the investment-output ratio---is
+$K_{ss}/Y_{ss}=\theta$.  If $\theta$ is 1/3, then 1/3 of output is invested
+and 2/3 of output is consumed.
+
+Now suppose that we choose more realistic
+values for $\beta$ and $\delta$ that yield capital-output ratios and investment
+output ratios as in the data and we use an estimate for $\theta$ consistent
+with income payments to capital. For example, the U.S.~capital-output ratio
+is on the order of 5 (if we consider all forms of capital investment).
+The investment-output ratio is on the order of 1/4 if we include consumer
+durables and public investment.  The capital share $\theta$ is roughly 1/2 if
+we count all non-employee payments as payments to capital. If the capital
+share is 1/2, then the depreciation rate---which is equal to the investment
+rate in a steady state with no growth---is equal to 1/20. That leaves
+the discount factor, which can be inferred from knowing $\theta$,
+$\delta$, and the capital-output ratio, is $\beta=20/21$.
+These estimates imply the following values in the steady state:
+$K_{ss}=25$, $X_{ss}=1.25$, $C_{ss}=3.75$, and $Y_{ss}=5$.
+
+An easy way to make units interpretable is to divide all variables
+by $Y_{ss}$. Let $k_t=K_t/Y_{ss}$, $k_{t+1}=K_{t+1}/Y_ss$, and
+$c_t=C_t/Y_{ss}$. If utility defined over $C_t$ is logarithmic
+then $U(C_t)=\log(Y_{ss})+ \log c_t$. Thus, maximizing $U(C_t)$
+is the same as maximizing $\log c_t$. The budget constraint
+in this case can be divided through by $Y_{ss}$ so that the problem
+to solve is redefined as follows:
+
+$$\begin{align}
+  \max_{\{k_{t+1}\}_{t=0}^\infty}\
+         &  \sum_{t=0}^\infty \beta^t \log c_t \\
+      s.t.\ \ & c_t + k_{t+1} - (1-\delta)k_t = A k_t^\theta
+              & \text{given} k_0>0.
+\end{align}$$
+
+where $A=Y_{ss}^\theta$.
+
+
+
+
+NOTE: TEXT FROM BCA SECTION TEMPORARILY HERE
+
+Let's consider an example from our *business cycle accounting*
+analysis in Section X.
+Recall the original optimization problem that
+we want to analyze is:
+
+$$\begin{align}
+\max_{\{c_t,\ell_t,x_t\}} & \ E\left[\sum_{t=0}^\infty \beta^t  U(c_t,\ell_t) N_t | s_t\right]
+   &c_t +(1+\tau_{xt}) x_t = r_t k_t + (1-\tau_{ht}) w_t h_t  + T_t\\
+   &N_{t+1} k_{t+1}  = [(1-\delta)k_t + x_t]N_t \\
+   &s_{t+1}  = P_0+P s_t+ \epsilon_{t+1}\\
+   &s_0 \ given
+\end{equation}$$
+
+where $s_t=[\log z_t,\tau_{ht},\tau_{xt},\log \hat g_t]$ is a vector
+of stochastic *wedges* that depend on the details of the data generating process
+but are taken as given here.
+Firms have technology $F(K_t,Z_tH_t)$ and take rental rates
+$r_t$ and wage rates $w_t$ as given. The technology is given by
+$Z_t=(1+\gamma_z)^t z_t$, where $z_t$ is a stochastic random variable that
+is stationary and $\gamma_z$ is the rate of technological growth.
+
+Before mapping this problem to one with quadratic objective and linear
+constraints, we first transform all variables that grow with technology by dividing them
+by $(1+\gamma_z)^t$ and then work with the hatted variables, for example,
+$\hat c_t=c_t/(1+\gamma_z)^t$. Here, we assume that utility is logarithmic
+with weight on
+
+
+
+

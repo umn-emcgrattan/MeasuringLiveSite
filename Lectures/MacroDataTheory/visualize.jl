@@ -1,4 +1,4 @@
-using DelimitedFiles, Plots, PlutoUI, HypertextLiteral
+using DelimitedFiles, Plots, HypertextLiteral
 
 include("scripts/macro_data_theory_helpers.jl")
 

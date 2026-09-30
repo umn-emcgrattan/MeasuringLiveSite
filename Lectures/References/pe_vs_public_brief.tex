@@ -1,0 +1,68 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Orders of Magnitude: Comparing Private Equity Valuation against Public Capital Markets}
+\author{Research Brief}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+A common theme in macroeconomic and business media commentary centers around the aggressive expansion of Private Equity (PE) buyouts, roll-ups, and alternative asset strategies. This data brief contrasts fund-level Private Equity metrics against broader public capital market indices to establish baseline corporate asset ownership scales.
+
+\section{Macroeconomic Discrepancy & Scaling}
+A foundational problem when comparing public and private sizing is confusing Net Asset Value (NAV) with Enterprise/Gross Value. At the fund level, private equity calculations remove debt liabilities used to execute corporate transactions.
+
+As established by \cite{kaplan2005private}, measuring the precise magnitude of PE requires accounting for cash flow constraints relative to public benchmarks. Even when adjusting private equity figures to re-incorporate typical capital structure debt margins, the private ecosystem remains mathematically minute compared to public equities (Table~\ref{tab:comparison}).
+
+\begin{table}[h!]
+\centering
+\caption{Comparative Capital Market Sizing Overview (EOY Estimate Concepts)}
+\label{tab:comparison}
+\begin{tabular}{lll}
+\toprule
+\textbf{Metric Dimensions} & \textbf{Public C-Corporations} & \textbf{Mature US PE Buyouts (7--10+ Yrs)} \\
+\midrule
+Asset Volume Magnitude & $\sim$\$92.31 Trillion & $\sim$\$848.5 Billion (Net Equity Value) \\
+Proxy Footprint Metric & ~3$\times$ US Gross Domestic Product & $\sim$0.92\% of US Public Valuation \\
+Asset Portfolio Liquidity & Continuous Daily Multi-Exchange & Multi-Year Illiquid Fund Lifecycle \\
+Structural Base Count & $\sim$3,500 Listed Issuers & Selective Aged Target Cohorts Only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This disparity highlights how private strategies, despite regional concentration, operate on a significantly smaller scale compared to global asset hubs, such as tech conglomerates studied in institutional data books \cite{slok2026public}. Furthermore, the long-term trend lines in corporate structure often focus on the declining volume of individual tickers rather than absolute asset dominance, a phenomenon categorized under the ``U.S. Listing Gap'' framework \cite{doidge2017u}.
+
+\begin{thebibliography}{1}
+
+\bibitem{kaplan2005private}
+S.~N. Kaplan and A.~Schoar.
+\newblock Private equity performance: Returns, persistence, and capital flows.
+\newblock {\em The Journal of Finance}, 60(4):1791--1823, 2005.
+\newblock \url{https://doi.org/10.1111/j.1540-6261.2005.00780.x}.
+
+\bibitem{doidge2017u}
+C.~Doidge, G.~A. Karolyi, and R.~M. Stulz.
+\newblock The U.S. listing gap.
+\newblock {\em Journal of Financial Economics}, 123(3):464--487, 2017.
+\newblock \url{https://doi.org/10.1016/j.jfineco.2016.12.002}.
+
+\bibitem{slok2026public}
+T.~Slok.
+\newblock Public markets are a shrinking part of the US economy.
+\newblock {\em Apollo Academy Research Papers}, 2026.
+\newblock \url{https://www.apolloacademy.com/public-markets-are-a-shrinking-part-of-the-us-economy}.
+
+\end{thebibliography}
+
+\end{document}
+
+Figure in WSJ 9/17/26 US private equity buyout net asset value, by age range
+https://www.wsj.com/finance/investing/rising-rates-will-make-private-equitys-bad-year-a-lot-worse-255daf59?mod=hp_lead_pos1

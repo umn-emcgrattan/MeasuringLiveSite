@@ -961,6 +961,8 @@ function plot_griliches_patents_per_real_rd(;
         color = :black,
         lw = 2,
         yscale = :log10,
+        xlims = (start_year, isnothing(end_year) ? maximum(r.year for r in plot_rows) : end_year),
+        xticks = start_year:20:(isnothing(end_year) ? maximum(r.year for r in plot_rows) : end_year),
         yticks = ([4, 8, 16, 32, 64, 128, 256, 512], ["4", "8", "16", "32", "64", "128", "256", "512"]),
         size = (700, 520),
         grid = false,

@@ -9,6 +9,11 @@ md"""
 
 ## References
 
+* ** Benveniste, Lawrence, and Jose Scheinkman.** (1979). 
+  "On the differentiability of the value function in dynamic models of economics."
+  *Econometrica*, 
+  47(3):727-732.
+
 * **Bureau of Economic Analysis and Bureau of Labor Statistics.** (2026).
   "Integrated Industry-Level Production Account (KLEMS)."
   U.S. Bureau of Economic Analysis and U.S. Bureau of Labor Statistics.
@@ -34,6 +39,11 @@ md"""
   *American Economic Review*,
   84(1): 1-23.
   https://www.jstor.org/stable/2117968
+
+* **Sargent, Thomas J.** (1987).
+  *Dynamic Macroeconomic Theory.*
+  Harvard University Press.
+
 
 """
 

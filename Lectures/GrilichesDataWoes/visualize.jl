@@ -1,4 +1,4 @@
-using DelimitedFiles, Plots, PlutoUI, HypertextLiteral
+using DelimitedFiles, Plots, HypertextLiteral
 
 include("scripts/griliches_historical_productivity.jl")
 include("scripts/griliches_klems_sector_compare.jl")

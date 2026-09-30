@@ -28,8 +28,8 @@ md"""
 ## Three Methods
 
 The first lesson in computing equilibria is learning how to set
-up one's problem so that computation is as easy as possible.
-In the growth model of Chapter 2, we have mulitple optimization problems
+up the problem so that computation is as easy as possible.
+In the growth model of Chapter MDT, we have multiple optimization problems
 to consider---for example, those of the households and the corporations---and
 require price functions that economic agents are assumed to
 take as given. I have purposely chosen an easy first
@@ -38,8 +38,9 @@ that would complicate the computation.
 The allocation in the model is efficient and can be
 found by maximizing the discounted utility of a stand-in household
 subject to the aggregate resource constraint.
-More specifically, we can compute the allocations using
-the following:
+More specifically, we can compute the allocations for the
+more complex model by solving the following
+stand-in household optimization problem:
 
 $$\begin{align}
 \max_{\{c_t,\ell_t,x_t\}}
@@ -66,8 +67,8 @@ Let's consider three methods to solve the optimal allocations: $\{c_t,\ell_t,x_t
 md"""
 ### Method I
 
-
-The first method for solving our dynamic problem involves iterating on the following Bellman equation: 
+The first method for solving our dynamic problem involves iterating on the 
+following Bellman equation: 
 
 $$\begin{equation}
 V(\hat k_t,z_t) = \max_{\hat c_t,h_t,\hat k_{t+1}}
@@ -118,6 +119,7 @@ $$\begin{equation}
 where $z_i$ and $z_j$ are the exogenous states today and tomorrow,
 respectively.
 
+
 An easy (but sometimes tedious) way to compute
 an approximate solution for the value
 function and policy functions is to guess an initial function $V$
@@ -125,8 +127,10 @@ function and policy functions is to guess an initial function $V$
 states), solve the right hand side maximization problem for all possible
 states $(\hat k,z)$---say, by checking all possible triplets of
 $\hat c,h,\hat k'$ until a maximum value is found---and then updating
-the guess for $V$. We make this faster by narrowing our search
-to $\hat k'$ and using the static first order conditions to infer
+the guess for $V$ until there is convergence. 
+
+We make the iterations much faster by narrowing our search
+to just $\hat k'$. We do this by using the static first order conditions to infer
 $\hat c$ and $h$. More specifically, suppose that we have a guess
 for $\hat k_{t+1}$ given the states $\hat k_t$ and $z_t$. We can
 solve the two unknowns $\hat c_t$ and $h_t$ using these two equations:
@@ -182,7 +186,15 @@ lower values of $h$ and then turns upward.  If $\chi<1$, then it will rise above
 a feasible solution. If there is, we can apply the bisection method shown
 in the numerical appendix.${}^3$
 
- 
+Let's assume that we have a working code with inputs $U(c,\ell)$ and $F(k,h)$
+defined and a function mapping the state $(\hat k,z)$ and current guess $\hat k'$
+to values for $c$, $h$, and $\ell=1-h$. We can solve the stochastic
+dynamic programming problem as in the numerical appendix---either with 
+two continuous states or one continuous and
+one discrete---by setting the return function $r$ equal to 
+the utility function defined over $x=[\hat k,z]$ and $u=\hat k'$
+and the contstraint $g$ defined over $x$, $u$, and shock $\epsilon.
+
 
 
 """

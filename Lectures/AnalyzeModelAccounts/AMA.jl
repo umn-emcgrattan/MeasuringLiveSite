@@ -1,396 +1,745 @@
 ### A Pluto.jl notebook ###
-# v1.0.3
+# v0.20.21
 
 using Markdown
 using InteractiveUtils
-
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    #! format: off
-    return quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-    #! format: on
-end
 
 # ╔═╡ 11111111-1111-4111-8111-111111111111
 # Required packages
 using DelimitedFiles, Measures, Plots, PlutoUI, HypertextLiteral
 
-# ╔═╡ 7996ce3f-a2d1-4aed-9bad-fad683ae7c01
-begin
-  include("scripts/macro_data_theory_helpers.jl")
-  macro_data = macro_read_accounts()
-  years = macro_data.years
-  nothing
-end
-
 # ╔═╡ 66666666-6666-4666-8666-666666666666
 TableOfContents()
 
-
 # ╔═╡ 22222222-2222-4222-8222-222222222222
 md"""
-# Comparing Data and Theory
+# Analyzing Model Accounts
 
-In this lecture,  we will work with data from the national income and product accounts (NIPA)
-compiled by the U.S. Bureau of Economic Analysis (BEA) starting in 1929. There are 
-two headine measures of aggregate output---gross domestic product (GDP) and gross domestic income (GDI)---that
-will be discussed along with their components. I will show how we can compare these NIPA data to predictions from a
-standard growth model. (Julia code and csv files are available to readers viewing this lecture in Pluto.jl.)
+In this lecture, we use the codes in Chapter CGM to compute
+an equilibrium. Before doing this, we need to parameterize the
+model economy using the data from Chapter MDT.
+(Julia code and csv files are available to readers viewing this lecture in Pluto.jl.)
 
 """
 
 # ╔═╡ 44444444-4444-4444-8444-444444444444
 md"""
-## National Accounts
+## Parameterizing the Model
 
-In Table 1, I report the two measures of aggregate output---GDP and GDI---and their components.
-GDP measures production from the expenditure side, while GDI measures the same
-economic activity from the income side. In principle they are equal, but the
-published estimates differ because they are constructed from different source
-data. In the table below, I summarize data from NIPA Table 1.1.5 (Gross Domestic Product)
-and Table 1.10 (Gross Domestic Income). 
+The first step is to choose functional forms for utility $U(c,\ell)$
+and production $F(k,h)$. To keep this as tractable as possible, we start with 
+log utility and Cobb-Douglas production:
 
-The main component of GDP is *personal consumption expenditures*, which is
-roughly two-thirds of the total. The main consumption category in recent years
-is services, also at a roughly two-thirds share. The remaining categories
-are nondurable and durable goods.
-*Gross private domestic investment* is next and includes nonresidential
-and residential fixed investment. The main category of nonresidential
-investment is a relatively new one: intellectual property products. 
-This category was introduced in 2013 when the BEA conducted a
-comprehensive revision to include estimated investment in
-research and development, entertainment, literary, and artistic
-originals. They added these estimates to investment in software,
-which had been included in 1999. Public consumption and investment is categorized
-separately in *government consumption expenditures and gross investment*.
-*Net exports* is the final category in GDP. In recent decades spending on imports has exceeded 
-exports and therefore the net amount has been negative.
+$$\begin{align}
+   U(c,\ell) = \log c + \psi \log \ell \\
+   \medskip
+   F(k,h) = k^\theta h^{1-\theta}
+\end{align}$$
 
-The bottom panel of Table 1 shows GDI and its components.
-The first category is *compensation of employees,* which is roughly 
-one-half of total income for most years. Compensation includes
-*wages and salaries* and *supplements to wages and salaries.* 
-The supplements, which have grown over time as a share of total
-compensation, include employer-sponsored health insurance and contributions
-to employee pensions. 
-Other production expenses are included with *taxes on production and imports
-less subsidies.* The taxes include state sales and  federal excise and import taxes,
-while the subsidies are payments by government to businesses in certain industrial
-sectors (say, for example, agriculture).
+and thus have a parameter governing the utility of
+leisure, $\psi$, and a parameter governing the share
+of revenue to capital owners, $\theta$. 
+Additionally, we need to choose the discount factor $\beta$,
+the rate of capital depreciation $\delta$, the parameters
+$\rho$ and $\sigma$ governing the technology shock process,
+and the growth rates for population $\gamma_n$ and
+technology $\gamma_z$.
 
-The next major category of income in Table 1 is *net operating
-surplus*, which primarily includes income payments to business owners 
-in private enterprises and the current surplus (or deficit if negative)
-of government enterprises.
-In the case of private enterprises, an important source of income
-is *corporate profits* that are paid primarily to passive investors 
-holding stocks and bonds or to business owners that actively 
-manage a corporation. Once corporate income taxes are paid, corporate
-investors use the rest to distribute payments to shareholders in the
-form of *net dividends* or reinvest the earnings in new plant and equipment.
-In the case of Subchapter S corporations (that file Form 1120-S), owners
-distribute all earnings to avoid paying corporate income taxes at both the
-entity level  and again as ordinary income on their individual tax
-returns. The *undistributed profits* are therefore the reinvestments
-of Subchapter C corporations(that file Form 1120. (Later, we investigate
-differences between the two types of corporate entities.)
-For non-corporate business owners that run sole proprietorships
-or partnerships, earnings are reported as *proprietors' income*. For
-persons who own rental properties and report the income on Form 1040 
-Schedule E, the national accountants 
-record the earnings as *rental income of persons*---as opposed
-to rental income of businesses such as corporations, partnerships, 
-or sole proprietorships. The *net interest* income listed next includes both
-monetary and imputed interest paid by domestic private enterprises less
-interest they receive. This category also includes *miscellaneous payments*
-of private enterprises to federal, state, and local governments for use
-of public land and natural resources. A related category is *business
-current transfer payments* made by private businesses to individuals,
-government agencies, or foreign entities without any direct good or
-service in return.
+The growth rates $\gamma_n$ and $\gamma_z$ can be measured directly
+from data on the rate of growth of population and real GDP per capita,
+respectively. The share of revenue to capital owners $\theta$
+can also be measured directly from the GDI income shares.
+The parameters $\delta$, $\beta$, $\psi$, $\delta$,
 
-The last income category is *consumption of fixed capital* or more familiarly
-capital depreciation.  This is an estimate by the BEA of 
-the current cost of replacing capital using present-day market prices.
+HERE
+
+Next, we will use the model's stationary first-order
+conditions to make progress on setting these parameters.
+To do this, we need to detrend variables that grow over time 
+in order to ensure that the system of equations we will work
+with is in fact stationary. In Chapter $CGM$, we wrote out the
+full model with variables in per capita
+units, for example, per capital consumption $c_t=C_t/N_t$,
+where $N_t$ grows at rate $\gamma_n$. This per capita variable
+is still nonstationary because it grows with technological change.
+To ensure stationarity, we divide this and other variables that grow with
+technology by $(1+\gamma_z)^t$ and indicate that with a hat symbol:
+$\hat c_t = c_t/(1+\gamma_z)^t$. Per capita hours and leisure are bounded
+by available time are thus not divided by technology growth.
 
 
-"""
+ratecan be measured directly from time series on  population
+ of the population $\gamma_n$ can be measu
+s can be measured directly from the national
+accounts time series
 
-# ╔═╡ 9bb36982-4d4f-4446-a7b7-8904e4daea7e
-begin
-    selector = @bind table_year Select(
-        collect(years),
-        default = 2024
-    )
-	
-    @htl("""
-    <div style="text-align:center; margin-bottom:.0em;">
-        <div style="font-size:1.2em; font-weight:bold;">
-            Table 1. U.S. National Income and Product Accounts (\$ Billions)
-        </div>
-        <div style="margin-top:0.5em;">
-            Year: $(selector)
-        </div>
-    </div>
-    """)
+With variables detrended, we can work with
+the first order conditions of the problem (P1) in Chapter CGM
+to assign parameters. The first order conditions for
+the problem are given as follows:
 
-end
+$$\begin{align}
+  & \hat y_t =  \hat k_t^\theta (z_t h_t)^{1-\theta}\\
+  & \psi \frac{\hat c_t}{1-h_t} = (1-\theta) z_t^{1-\theta}\left(\frac{\hat k_t}{h_t}\right)^\theta \\
+  & \frac{1}{c_t}
+      \frac{\beta}{1+\gamma_z} E_t \frac{1}{\hat c_{t+1}}
+         \left(\theta \left(\frac{\hat k_{t+1}}{z_{t+1} h_{t+1}}\right)^{\theta-1}+1-\delta\right)\\
+  & \hat y_t =  \hat c_t + (1+\gamma_z)(1+\gamma_n) \hat k_{t+1}-(1-\delta)\hat k_t.
+\end{align}$$
 
-
-
-# ╔═╡ 618d7424-efa6-4bbd-a18f-3ecf3320283a
-begin
-  macro_nipa_table_html(table_year; show_title=false)
-end
-
-
-
-
-
-# ╔═╡ 76fade3f-b712-4cfc-8fee-53f9f13a375b
-begin
-  fig1 = macro_gdp_gdi_plot()
-end
+The first is the definition for output. The second is the intratemporal
+condition for the labor-leisure choice. The third is the intertemporal
+condition for the consumption-savings decision. The fourth is
+the resource constraint that says output is equal to 
+consumption plus investment.
 
 
 
 
 # ╔═╡ 7e508426-a228-4962-8a2a-bf456c1c37c9
 md"""
-## Model Economy
-
-Consider the simplest version of a model that we could
-match up to these NIPA data---where, by simple, I mean one
-with lump-sum taxes, one type of capital, one business type,
-and no international trade.
-(Later, we will work with a more general model and repeat the exercise
-of comparing the data and model).
-Assume that households choose paths
-for per capita consumption $c_t$ and leisure $\ell_t$ to  solve: 
+## Setting Up Computations
 
 
-$$\begin{align*}
-\max_{\{c_t,\ell_t,s_{t+1}\}}
- E_0 \sum_{t=0}^\infty & \beta^t U(c_t,\ell_t) N_t\\
-{\rm subject\ to } &
-\sum_{t=0}^\infty p_t\{c_{t}+v_{t}(s_{t+1}-s_{t})\}
-     \leq \sum_{t=0}^\infty p_{t}\{d_{t}s_{t}+w_{t}h_{t}-\tau_t\}
-\end{align*}$$
 
-where
-$N_t=(1+\gamma_n)^t$ is the size of the population,
-$v_t$ is the price of firm shares,
-$s_t$ is the quantity of shares held,
-$d_t$ is the amount of per capita distributions paid per share to the shareholders
-(which in this case is our households),
-$w_t$ is the wage rate paid to labor,
-$h_t=1-\ell_t$, and
-$\tau_t$ is a lump-sum tax.
-The price used when summing expenditures and incomes is
-$p_t$, which is the Arrow-Debreu price (and equal to the household
-marginal utility in equilibrium and the rate at which firms
-discount future distributions).
 
-Businesses maximize the present value of aggregate
-distributions $D_t=N_td_ts_t$
-to households:
 
-$$\begin{align*}
-E_0 \sum_{t=0}^\infty\, & p_t D_t \\
-{\rm s.t.}\ \  &  K_{t+1} = (1-\delta)K_t + X_t\\
-               &  D_t = F(K_t,Z_t H_t)-w_tH_t-X_t
-\end{align*}$$
+We will use these conditions to parameterize the model
+and to set things up 
 
-where, again,
-$p_t$, is the discount factor for the firm shareholders,
-$K_t$ is the capital stock,
-$X_t$ is gross investment,
-$H_t$ is the total labor input, and
-$Z_t=z_t (1+\gamma_z)^t$ is the technology parameter with
+which are explicitly derived in the numerical appendix.
+
+This is a system of dynamic equations that we are intereseted in solving.
+More specifically, we want to compute
+decision rules mapping the two states---capital $\hat k$ and technology $z$---to
+four decision functions: 
+output $\hat y(\hat k,z)$, consumption $\hat c(\hat k,z)$, hours $h(\hat k,z)$,
+and next period capital $\hat k'(\hat k,z)$.
+
+
+
+
+HERE
+
+
+
+
+The first lesson in computing equilibria is learning how to set
+up one's problem so that computation is as easy as possible.
+In the growth model of Chapter 2, we have mulitple optimization problems
+to consider---for example, those of the households and the corporations---and
+require price functions that economic agents are assumed to
+take as given. I have purposely chosen an easy first
+model by abstracting from any distortionary taxation or modeling choices
+that would complicate the computation.
+The allocation in the model is efficient and can be
+found by maximizing the discounted utility of a stand-in household
+subject to the aggregate resource constraint.
+More specifically, we can compute the allocations using
+the following:
+
+$$\begin{align}
+\max_{\{c_t,\ell_t,x_t\}}
+E_0 \sum_{t=0}^\infty & \beta^t U(c_t,\ell_t) N_t\\
+{\rm subject\ to }\ \
+& c_t + x_t = (1+\gamma_z)^t z_t F(k_t,h_t)\\
+& N_{t+1} k_{t+1} = [(1-\delta) k_t+x_t] N_t\\
+& \log z_t = \rho \log z_{t-1} + \epsilon_t, \epsilon\sim N(0,\sigma^2)\\
+& h_t + \ell_t = 1\\
+& c_t, x_t \geq 0 \quad {\rm in\ all\ states}.
+\end{align}$$
+
+Notice that here we do not get into discussions
+about transactions and ownership.  Instead, we
+solve for allocations and then use the solution
+to construct everything else that we need when coomparing
+model data to the U.S. national accounts in Chapter 3.
+
+Let's consider three methods to solve the optimal allocations: $\{c_t,\ell_t,x_t\}$.
+
+"""
+
+# ╔═╡ 7e508426-a228-4962-8a2a-bf456c1c37c9
+md"""
+### Method I
+
+
+The first method for solving our dynamic problem involves iterating on the following Bellman equation: 
 
 $$\begin{equation}
- \log z_{t+1} = \rho \log z_t +\epsilon_{t+1}
+V(\hat k_t,z_t) = \max_{\hat c_t,h_t,\hat k_{t+1}}
+  \{ U(\hat c_t,1-h_t) + \beta(1+\gamma_n) 
+          E [V(\hat k_{t+1},z_{t+1} )|\hat k_t,z_t]\},
 \end{equation}$$
 
-and $\epsilon\sim N(0,\sigma^2)$.
+where the maximization is subject to
 
-Let $Y_t=F(K_t,Z_tH_t)$ be the total business output in the
-economy. This total can be compared to national product---the
-the sum of private and public consumption and investment---and
-to national income---payments to labor and to capital.
-Let $C_t=N_tc_t$ and $G_t$ be total private and public consumption.
-Adding investment, we get total output:
+$$\begin{align}
+ \hat c_t + \hat x_t &= z_t F(\hat k_t, h_t)\\
+ \hat k_{t+1} &= [(1-\delta)\hat k_t+\hat x_t]/[(1+\gamma_z)(1+\gamma_n)]\\
+ \log z_{t+1} &= \rho \log z_t + \epsilon_{t+1}
+\end{align}$$
 
-$$\begin{equation*}
-Y_t = C_t + G_t + X_t
-\label{product}
-\end{equation*}$$
+Lower-case letters are used to indicate that the variable
+is per capita and the hat further indicates that it
+has been divided by the growth in technology (e.g,
+$k_t =K_t/N_t$, $\hat k_t=k_t/(1+\gamma_z)^t$). Here, I am
+assuming that the choice of utility function is consistent
+with balanced growth so that I can replace $c_t$ by $\hat c_t$
+without consequence.
 
-which is GDP in our model.  On the income side, there are
-payments to labor $w_tH_t$, payments to the owners of firms
-$D_t$, and gross investment in capital. Adding it up,
-we get
+Consider two ways to deal with the expectation
+operator.  The first is to treat $z_t$ as a continuous state variable
+and use a quadrature method to compute the integral related
+to the expectation of $z$ next period:
 
-$$\begin{align*}
-Y_t &= w_tH_t + D_t + K_{t+1}-K_t+\delta K_t.
-    &= w_tH_t + D_t + X_t,
-\label{income}
-\end{align*}$$
+$$\begin{align}
+  E [V(\hat k',z')| z]
+        &   = \int V(\hat k',\rho z+\epsilon) f(\epsilon) d\epsilon\\
+        &   \approx \sum_i \omega_i V(\hat k',\rho z+\epsilon_i) f(\epsilon_i)
+\end{align}$$
 
-for model GDI.
-Here, since we are considering an economy that is closed,
-we need only aggregate budgets of the households and government
-to check the consistency of our domestic product and income
-equations.  In the aggregate, consumption $C_t$ is equal to wages plus
-dividends less taxes, $w_tH_t+D_t-N_t\tau_t$ and $G_t+N\tau_t=0$.
-Therefore, $C_t+G_t+X_t= w_tH_t+D_t+X_t$ and \ref{product} and
-\ref{income} both hold.
+where $f(\cdot)$ is the density function of a normally distributed random
+variable. The approximate sum in the second equation is an application of
+a numerical quadrature method with weights given by $\omega_i$ and points on the
+grid used in the approximation given by $\epsilon_i$, where $i$ is an index
+for these grid points.${}^1$  Another way to approximate the expectation is use a 
+Markov chain for $z_t$, one that does a reasonable job in replicating the 
+autoregressive process above.${}^2$  In this case, the expectation is written as
+the following sum:
 
-In Table 2, we build the model accounts starting with the
-BEA concepts from Table 1.
-The upper panel is our model GDP and its components, while the
-the lower panel is GDI and its components. 
-The amounts are shown in billions of dollars for 
-the user-specified year under the column heading
-"levels."  The shares relative to what we
-will call *model output* are listed under "%Y."
+$$\begin{equation}
+  E [V(\hat k',z_j)| z_i] \approx \sum_j {\rm prob}(z_j|z_i) V(\hat k',z_j)
+\end{equation}$$
 
-For both GDP and GDI,
-we add imputed capital services and durable depreciation,
-and we subtract sales tax. These adjustments to the BEA
-concept of GDP and GDI 
-are described next.
+where $z_i$ and $z_j$ are the exogenous states today and tomorrow,
+respectively.
 
-The first adjustment---which requires us
-to impute capital services and include durable depreciation---is 
-made if we want to treat spending on  consumer durables as investment.
-In other words, if we want to treat consumer durables in the 
-same way that the BEA treats the stock of housing (or, in their
-language, residential investment). Both are capital inputs 
-to the household sector, but in our current system of 
-national accounting, the BEA includes housing  in their 
-gross private domestic investment series
-and consumer spending on appliances, furniture, or vehicles
-in their personal consumption expenditure series.
-Here, we treat these inputs symmetrically. To do so, we must
-add the two items mentioned above: imputed capital services that the 
-consumer durables provide and consumer durable depreciation---the
-first being consumption of services and the second being consumption
-of fixed capital.  Our estimate of the service flow is a fixed return---say, 4 percent---on
-the consumer durable capital stock at current cost. The BEA has estimates for the
-this in the Fixed Asset Table 1.1.FN
-We must also include the depreciation of the
-capital as we do for residential investment.
-Depreciation of consumer durables is reported by the BEA in 
-Fixed Asset Table 8.4. 
+An easy (but sometimes tedious) way to compute
+an approximate solution for the value
+function and policy functions is to guess an initial function $V$
+(say, a piecewise linear or bi-linear function over a grid for the
+states), solve the right hand side maximization problem for all possible
+states $(\hat k,z)$---say, by checking all possible triplets of
+$\hat c,h,\hat k'$ until a maximum value is found---and then updating
+the guess for $V$. We make this faster by narrowing our search
+to $\hat k'$ and using the static first order conditions to infer
+$\hat c$ and $h$. More specifically, suppose that we have a guess
+for $\hat k_{t+1}$ given the states $\hat k_t$ and $z_t$. We can
+solve the two unknowns $\hat c_t$ and $h_t$ using these two equations:
 
-The second adjustment is an imputation of capital services 
-for the government capital. The BEA includes investment by the 
-government but imputes a return of 0 percent.  Here, we impute
-a return of 4 percent and multiply it by the current-cost capital stock
-of the government using Fixed Asset Table 1.1.  In the case of government capital,
-we add the imputed capital services, but we do not need to add
-the depreciation because it is already included in the national accounts.
+$$\begin{align}
+  & U_\ell(\hat c_t,1-h_t)= U_c(\hat c_t,1-h_t)\, z_t {\partial F(\hat k_t,h_t)\over \partial h_t} \\
+  &\hat c_t = z_t F(\hat k_t, h_t)-(1+\gamma_z)(1+\gamma_n)\hat k_{t+1}+(1-\delta)\hat k_t  
+\end{align}$$
 
-The third adjustment made to GDP and GDI is the removal of sales taxes.
-To estimate personal consumption expenditures, the BEA relies
-on data from retail purchases. The retail prices are inclusive of sales
-taxes. In NIPA Table 3.5, BEA reports the amounts collected.  
-Notice that the three adjustements plus statistical discrepancy
-are also made to GDI in the lower panel.
+Notice also that we can make the problem even simpler by substituting
+$\hat c_t$ from the resource constraint into the intratemporal condition
+that equates the return from an additional hour in leisure to the return
+from an additional hour in labor. 
 
-If we make any adjustments to the totals, we need to also
-adjust the appropriate GDP and GDI components. Let's start with GDP.
-As we noted above, the recategorization of consumer durables 
-as investment adds two adjustments. The first is the imputation
-of capital services (equal to 0.04 times the capital stock)
-that shows up under model $C_t$. The second is the durable
-depreciation that also shows up under model $C_t$.  The imputation
-of capital services for the government capital is also included
-here with $C_t$ because we have chosen to add private and
-government consumption for nondefense goods in our model consumption
-category. We think of the categories under personal consumption
-expenditures and government nondefense expenditures as close
-substitutes. Because we have recategorized consumption of durable goods
-as investment, that is subtracted from $C_t$ and added to the
-model investment $X_t$. Thus, sales tax is removed in
-two places: from consumption of non-durables and services and from durables.
-We assume pro-rata shares when doing this. Besides durable
-goods, we add to model investment the investment in government nondefense 
-and net exports.  We include net exports here since this simple
-version of the model does not include a foreign sector, but we
-know that a significant amount of trade is done intracompany
-by U.S.~multinational corporations that have subsidiaries
-abroad.  The final category of output $Y_t$ is model
-government $G_t$, which is now simply defense spending
-since nondefense spending is included elsewhere.
+Let's consider some functional forms to see what this will look like in
+practice. Suppose that utility that is logarithm and the production
+function is Cobb-Douglas:
 
-Next consider the same adjustments on the income side of the
-accounts. The first category on the income side is the
-compensation of employees, which is mapped
-to model wages $w_tH_t$. There are no adjustments here.
-The main adjustments appear in the next category: net operating
-surplus. The first one is imputed capital services, which is effectively a 
-payment to capital and thus paid to the owners of this capital
-by way of dividends $D_t$.  The sales taxes are included
-in the BEA income category "taxes on production and imports"
-along with taxes on property and tariffs.  We include this
-category with the net operating surplus---which are primarily
-net payments to owners of capital-- and subtract the sales taxes,
-subsidies, and undistributed corporate profits.  The undistributed
-corporate profits is an investment in new capital $K_{t+1}-K_t$.
-The final category is the depreciation of capital that has
-the additional amount for consumer durable goods.
+$$\begin{align}
+  U(c,\ell)=\log c+\psi\log(\ell)\\
+  F(k,h)=k^\theta h^{1-\theta}
+\end{align}$$
 
-In the next lecture, we will compute equilibria
-for the model and construct comparable national
-accounts using simulated data.
+which means that our two equations and two unknown system of equations
+after some manipulation of terms can be written 
+as follows (with $t$ suppressed):
 
+$$\begin{align}
+  &\hat c = (1-\theta) z \frac{\hat k}{h})^\theta(1-h)/\psi \\
+  &\hat c = \left[z\left(\frac{\hat k}{h}\right)^{\theta-1} +1-\delta\right]\hat k
+             -(1+\gamma_z)(1+\gamma_n)\hat k'
+\end{align}$$
 
-FN Our Julia code uses 4 percent, but that can be changed
-by users of the code.
+Equating the right-hand sides of both yields a simple one equation
+in one unknown ($h$) system. We can simplify this even more by multiplying
+both dividing through by $(1-\theta)z (\hat k/h)^\theta/\psi$:
+
+$$\begin{equation}
+   1-h = \frac{\psi}{1-\theta} \{h - \chi(z,\hat k,\hat k')h^\theta\}
+\end{equation}$$
+
+where $\chi(z,\hat k,\hat k') = \{(1+\gamma_z)(1+\gamma_n)\hat k'-(1-\delta)\hat k\}/
+(z{\hat k}^\theta)$ is known because we have the state vector $(\hat k,z)$ and
+the guess for $\hat k'$. Notice that this is equal to the guess for  investment $\hat x$
+divided by the maximum possible output (at $h$ equal to 1).
+Since $h$ is the fraction of time in
+work, it must be between 0 and 1. If we were to plot the right and left
+sides of the equation, we find the left side is a downward sloping line starting
+at (0,1) and ending at (1,0).
+The right hand side has a very particular shape that starts at 0, declines over
+lower values of $h$ and then turns upward.  If $\chi<1$, then it will rise above
+0 by $h=1$.  This is the condition that we check to make sure there is in fact
+a feasible solution. If there is, we can apply the bisection method shown
+in the numerical appendix.${}^3$
+
+ 
 
 
 """
 
 
-# ╔═╡ 8dc8b9be-f701-4d7b-97ac-e42a700c108b
-begin
- 
-    @htl("""
-    <div style="text-align:center; margin-bottom:.0em;">
-        <div style="font-size:1.2em; font-weight:bold;">
-            Table 2. Model National Income and Product Accounts (\$ Billions)
-        </div>
-    </div>
-    """)
+# ╔═╡ a61ff7cf-49f0-4a45-88a4-9f4cab7da31d
+md"""
+### Method II
 
-end
+We turn next to a near-linear method that relies importantly on
+mapping our non-linear problem to a standard LQ problem with linear constraints and a
+quadratic objective.  Before doing the mapping, consider a general maximization problem
+with $m$-dimensional state vector $X$ and $n$-dimensional control vector $u$:
 
 
+$$\begin{align}
+    \max_{\{u_t\}_{t=0}^{\infty}}{\rm E} & \left[
+            \sum_{t=0}^{\infty} \beta^t r(X_t,u_t)\ |\, X_0\, \right]\\
+   {\rm subject\ to\ \ \ } & X_{t+1}=g(X_t,u_t,\epsilon_{t+1})\\
+                           & X_0\ {\rm given}.
+\end{align}$$
 
-# ╔═╡ cfe84488-a2f0-4f58-8d51-7212f2829fa6
-begin
-  macro_model_accounts_html(table_year; show_title=false)
-end
+Here, $r$ is the objective
+function which is known, $g$ governs the evolution of the state vector
+and is also known, and $\epsilon$ is a vector of shocks affecting this evolution
+which we'll assume to be iid.
+During class, we considered a nested version of Homework 1
+with inelastic labor and full depreciation of capital so that we
+could get very concrete about what we are trying to do.
+
+We can approximate the nonlinear prototype problem with a near-linear related
+problem:
 
 
+$$\begin{align}
+    \max_{\{u_t\}_{t=0}^{\infty}}{\rm E}_0 &\sum_{t=0}^{\infty} 
+           \beta^t (X_t'Q X_t+u_t'R u_t +2 X_t' W u_t)\\
+   {\rm subject\ to\ \ \ } & X_{t+1}=A X_t+B u_t+C\epsilon_{t+1}\\
+                           & X_0\ {\rm given}\tag{1}\label{LQ control problem}
+\end{align}$$
+
+where
+
+$$\begin{align}
+    r(X_t,u_t)                &\simeq X_t'Q X_t+u_t'R u_t +2 X_t' W u_t\\
+    g(X_t,u_t,\epsilon_{t+1}) &\simeq A X_t +B u_t + C\epsilon_{t+1},\tag{2}\label{r and g}
+\end{align}$$
+
+with $Q$ and $R$ symmetric.
+That is, we solve a problem with a quadratic objective function and
+linear constraints.  Note that implicit in our formulation of \ref{LQ control
+problem} are the assumptions that $X_t$ is contained in the agents'
+information sets at time $t$ and that the agents know the objective function
+and transition functions for all variables.
+
+To obtain the functions in \ref{r and g}, we take a second
+and first-order Taylor expansion of the corresponding nonlinear functions
+around the steady state of the system.  Thus, when evaluated at
+the stationary point, the original and approximated functions have the
+same value.
+
+To find the steady state of the system, we first set the disturbance term
+$\epsilon_t$ to its unconditional mean. Without loss of generality, assume
+the mean is zero.  We then find the first order conditions of the resulting
+nonstochastic version of the model:
 
 
+$$\begin{align}
+   \max_{\{u_t\}_{t=0}^{\infty} }
+          &\sum_{t=0}^{\infty}\beta^t r(X_t,u_t)\\
+              {\rm subject\ to\ \ \ } & X_{t+1}=g(X_t,u_t,0)\tag{3}\label{nonstochastic problem}
+\end{align}$$
+
+and $X_0$ given.  Formulating the Lagrangian:
+
+$$\begin{equation}
+{\cal L}=\sum_{t=0}^{\infty}\beta^t\{ r(X_t,u_t)-\lambda_{t+1}'
+                            (X_{t+1}-g(X_t,u_t,0))\}\tag{4} \label{lagrangian}
+\end{equation}$$
 
 
+and taking derivatives with respect to $u_t$ and $X_{t+1}$,
+we obtain the following first-order conditions
 
 
+$$\begin{align}
+   {\partial r(X_t,u_t)\over \partial u_t} +{\partial
+           g(X_t,u_t,0)\over \partial u_t}'\lambda_{t+1} &=0\\
+   \beta {\partial r(X_{t+1},u_{t+1})\over \partial X_{t+1}}
+            -\lambda_{t+1}+ \beta {\partial g(X_{t+1},u_{t+1},0)
+                                   \over \partial X_{t+1}}'\lambda_{t+2}
+                                                         &=0\tag{5}\label{focs}
+\end{align}$$
+
+for $t\geq 0$, where $\{\lambda_t\}$ is a sequence of Lagrange multipliers.
+Eliminating time subscripts from \ref{focs} and the constraint in
+\ref{nonstochastic problem},
+we then get the following set of nonlinear equations:
+
+$$\begin{align}
+           {\partial r(X,u)\over \partial u} +{\partial
+                g(X,u,0)\over \partial u}'\lambda &=0\\
+             \beta {\partial r(X,u)\over \partial X} -\lambda+
+             \beta {\partial g(X,u,0)\over \partial X}'\lambda&=0\\
+              X-g(X,u,0)&=0\tag{6}\label{nonlinear eqns}
+\end{align}$$
+
+This is a set of $2m+n$ equations with $2m+n$ unknowns, $X,u,\lambda$.
+The fixed point of this system is the steady state, say ${\bar X},{\bar
+u},{\bar \lambda}$, around which we take first and second-order Taylor
+expansions of $g$ and $r$.  Thus, we have the problem given by
+\ref{LQ control problem}.
+
+Thus far, we have derived the first order conditions for the original
+nonlinear problem that imply a set of equations for finding the
+steady state (or more precisely, the balanced growth path).
+We take a second order Taylor expansion of the objective function
+($r(X,u)$) around the steady state to get matrices $Q$, $R$, and
+$W$.  We take a first-order Taylor expansion of the constraints
+($g(X,u,\epsilon)$) around the steady state to get $A$, $B$, $C$.
+
+Next, we need to put some conditions on these matrices to
+ensure that the optimal solution to our problem yields a
+ stable system (and that we are maximizing, not minimizing).
+The relevant conditions are usually stated in terms of a problem
+with $\beta=1$ and $W=0$.  We can reformulate our problem
+so that there is no discounting or cross-products as follows.
+Let
 
 
+$$\begin{align}
+{\tilde X}_t &=\beta^{t\over 2} X_t\\
+{\tilde u}_t &=\beta^{t\over 2} (u_t+R^{-1}W'X_t)\\
+{\tilde A}   &= \sqrt{\beta}(A-BR^{-1}W')\\
+{\tilde B}   &=\sqrt{\beta}B\\
+{\tilde Q}   &=Q-WR^{-1}W'.
+\end{align}$$
+
+Assume that $\tilde Q$ and $R$ are negative definite matrices
+(which is an assumption that can be weakened)
+and assume that there exists a matrix
+$\tilde F$ such that $\tilde A-\tilde B \tilde F$ has eigenvalues
+inside the unit circle.  In this case, the system is stable
+and, in the language of control theorists,
+ ($\tilde A,\tilde B$) is stabilizable.  The matrix $\tilde F$ that is
+relevant for us is the matrix governing the optimal
+solution, namely, $\tilde u_t = -\tilde F \tilde X_t$.
+
+for the original optimization problem is the time-invariant linear
+rule:
+
+$$\begin{align}
+     u_t=-F X_t,\qquad F&=(R+\beta B' P B)^{-1} (\beta B' P A+W')\\
+                        &=(R+{\tilde B}' P{\tilde B})^{-1}{\tilde B}' 
+                                          P{\tilde A}+R^{-1}W'\\
+                        & \tilde F + R^{-1}W'.\tag{7}\label{solution}
+\end{align}$$
+
+The matrix $P$ in \ref{solution} is the steady-state solution 
+to the matrix Riccati difference equation 
+
+$$\begin{align}
+   P_t&=Q+\beta A' P_{t+1} A -(\beta A' P_{t+1} B + W)
+          (R+\beta B' P_{t+1} B)^{-1} (\beta B' P_{t+1} A+W')\\
+      &={\tilde Q}+{\tilde A}' P_{t+1} {\tilde A} -{\tilde A}' P_{t+1} 
+                   {\tilde B} (R+{\tilde B}' P_{t+1} {\tilde B})^{-1}
+                     {\tilde B}' P_{t+1} {\tilde A}\tag{8}\label{riccati}
+\end{align}$$
+
+as $t\rightarrow -\infty$, with terminal condition $P_T\leq 0$.
+
+There have been many algorithms developed for the solution of the 
+discrete-time Riccati equation. 
+In all cases, we take 
+as given the matrices $A$, $B$, $Q$, $R$, $W$ and scalar $\beta$
+(or equivalently ${\tilde A}$, ${\tilde B}$, ${\tilde Q}$, and $R$),
+tolerance criteria $\gamma_1$ and $\gamma_2$, and 
+a matrix norm $\Vert\cdot\Vert$.
+The simplest method is simply direct iteration.
+To do this, set an initial symmetric 
+Riccati matrix, $P^0\leq 0$.  Then the steps are as follows:
 
 
+1.  At iteration $n$, we compute $P^{n+1}$ and ${\tilde F}^n$ to be
 
+$$\begin{align}
+P^{n+1}&={\tilde Q}+ {\tilde A}' P^n {\tilde A}-{\tilde A}'P^n {\tilde B} 
+(R+{\tilde B}'P^n {\tilde B})^{-1} {\tilde B}'P^n {\tilde A}\\
+{\tilde F}^n &= (R+{\tilde B}' P^n {\tilde B})^{-1} {\tilde B}' P^n {\tilde A}
+\end{align}$$
+
+2. If $\Vert P^{n+1} -P^n\Vert< \gamma_1 \Vert P^n\Vert$ and
+$\Vert {\tilde F}^{n+1} -{\tilde F}^n\Vert< \gamma_2 \Vert 
+{\tilde F}^n\Vert$, go to (c);
+otherwise, increase $n$ by one and return to (a).
+
+3. Set $F={\tilde F}^n+R^{-1}W'$, $P=P^n$.
+
+With a steady-state solution to the Riccati matrix, we can use \ref{solution}
+to compute $F$ and the law of motion for the state variables:
+
+$$\begin{equation}
+   X_{t+1}=(A-BF) X_t + C\epsilon_{t+1}\tag{9}\label{law of motion}
+\end{equation}$$
+
+Furthermore, given an initial condition for the states, $X_0$, and a 
+realization of the shocks, $\epsilon_t,\ t\geq0$, we can generate time-series
+for $X_t$ via \ref{law of motion} 
+and $u_t$ via \ref{solution}. 
+
+
+"""
+
+# ╔═╡ 33333333-3333-5333-8333-333333333333
+md"""
+### Method III
+
+We next use the insights of Vaughan (1970) to 
+exploit certain properties of the first-order conditions of the
+LQ problem defined above.  Vaughan assumes no
+discounting or cross-product terms, so we'll map the variables
+and coefficients to $\tilde X$, $\tilde u$, $\tilde A$, $\tilde B$, and
+$\tilde Q$ as shown earlier. Also note that because the decision function for
+$u$ does not depend on the variances and covariances of $\epsilon$,
+we can abstract from the uncertainty for now.
+Writing out the Lagrangian, we have
+
+$$\begin{equation}
+{\cal L}=\sum_{t=0}^{\infty}\{ \tilde X_t' \tilde Q \tilde X_t+
+\tilde u_t' R \tilde u_t
+-\lambda_{t+1}'(\tilde X_{t+1}-\tilde A \tilde X_t-\tilde B \tilde u_t)\}\tag{10}\label{lagrangian2}
+\end{equation}$$
+
+Taking derivatives with respect to $\tilde u_t$, $\tilde X_{t+1}$,
+and $\lambda_{t+1}$,
+we obtain the following first-order conditions
+
+$$\begin{align}
+    2 R\tilde u_t +\tilde B' \lambda_{t+1}  &=0\\
+    \tilde Q \tilde X_{t+1} -\lambda_{t+1} +  \tilde A'\lambda_{t+2} &=0\\
+    \tilde X_{t+1} - \tilde A \tilde X_t - \tilde B\tilde u_t &=0\tag{11}\label{focs2}
+\end{align}$$
+
+for $t\geq 0$, where $\{\lambda_t\}$ is a sequence of Lagrange multipliers.
+Dividing the first two equations by 2 and defining $\tilde \lambda_t=\lambda_t/2$,
+we can substitute out $\tilde u_t$ and rearrange terms:
+
+$$\begin{equation}
+\begin{bmatrix}
+    \tilde X_t  \\ 
+    \tilde \lambda_t 
+\end{bmatrix}
+ = 
+\begin{bmatrix}
+    \tilde A^{-1} &  \tilde A^{-1} \tilde B R^{-1} \tilde B'\\
+    \tilde Q \tilde A^{-1}  & \tilde Q \tilde A^{-1} \tilde B R^{-1} \tilde B' + \tilde A'
+\end{bmatrix}
+\begin{bmatrix}
+    \tilde X_{t+1}  \\ 
+    \tilde \lambda_{t+1}
+\end{bmatrix}.
+\end{equation}$$
+
+Let ${\cal H}$ be the coefficient matrix on the right hand side.
+Vaughan showed that this matrix can be decomposed and used
+directly to obtain the Riccati matrix $P$ (and hence the solution
+to the LQ problem); that is, he showed that
+
+$$\begin{equation}
+{\cal H} = 
+\begin{bmatrix}
+    V_{11} & V_{12}\\ 
+    V_{21} & V_{22}
+\end{bmatrix}
+\begin{bmatrix}
+    \Lambda & 0\\ 
+    0 & \Lambda^{-1}
+\end{bmatrix}
+\begin{bmatrix}
+    V_{11} & V_{12}\\ 
+    V_{21} & V_{22}
+\end{bmatrix}^{-1},
+\end{equation}$$
+
+where the eigenvalues of $\Lambda$ are outside of the unit
+circle.  Notice that the eigenvalues come in reciprocal pairs.
+This is an important property that implies a unique
+stable solution, one that satisfies the transversality
+condition and ensures a bounded return.
+
+Using the fact that the Lagrange multiplier is the derivative
+of the value function ($\tilde \lambda_t = P \tilde X_t$), it
+is easy to figure out how to set $P$ so as to get a stationary
+dynamical system for $X$.  Let $W=V^{-1}$. In this case, it
+is easy to show that:
+
+$$\begin{equation}
+   \tilde X_{t+1} = 
+   \{ V_{11} \Lambda^{-1} (W_{11}+W_{12}P) + V_{12}\Lambda (W_{21}+W_{22}P)\}
+      \tilde X_t.
+\end{equation}$$
+
+Since $\Lambda$ has roots outside the unit circle, it must be
+the case that $P=-W_{22}^{-1} W_{21}$.  Note that since $W=V^{-1}$,
+this is equivalent to setting $P=V_{21} V_{11}^{-1}$.
+
+In the case that $\tilde A$ is not invertible, we can modify the method
+slightly and use generalized eigenvalues with the following alternative
+system:
+
+
+$$\begin{equation}
+\begin{bmatrix}
+     \tilde A & 0 \\ 
+     -\tilde Q & I
+\end{bmatrix}
+\begin{bmatrix}
+    \tilde X_t  \\
+   \tilde \lambda_t 
+\end{bmatrix}
+ = 
+\begin{bmatrix}
+    I &  \tilde B R^{-1} \tilde B'\\
+    0  & \tilde A'
+\end{bmatrix}
+\begin{bmatrix}
+    \tilde X_{t+1}  \\
+    \tilde \lambda_{t+1}
+\end{bmatrix}.
+\end{equation}$$
+
+Let ${\cal H}_1$ be the coefficient matrix for the state and 
+costate in $t+1$, and let 
+${\cal H}_2$ be the coefficient matrix for the state and 
+costate in $t$. With these assignments, we compute generalized
+eigenvalues from 
+
+$$\begin{equation}
+  {\cal H}_2 v = \mu {\cal H}_1 v.
+\end{equation}$$
+
+The stable roots satisfy $|\mu|<1$.
+
+Once we have 
+a steady-state solution to the Riccati matrix, we can use the earlier
+formula to compute $F$ and the law of motion for the state variables:
+
+$$\begin{equation}
+   X_{t+1}=(A-BF) X_t + C\epsilon_{t+1}\tag{12}\label{law of motion}
+\end{equation}$$
+
+Furthermore, given an initial condition for the states, $X_0$, and a
+realization of the shocks, $\epsilon_t,\ t\geq0$, we can generate time-series
+for $X_t$ and $u_t$.
+
+"""
+
+# ╔═╡ 66666666-6666-7666-8666-666666666666
+md"""
+### A Check on the Codes
+
+Here, we discuss a problem that 
+we can do by hand, namely:
+
+$$\begin{align}
+  \max_{\{c_t,k_{t+1}\}}  & E\,\sum_{t=0}^\infty \beta^t 
+          \, \log(c_t) \\
+\noalign{\medskip}
+{\rm subj.\ to}\ \ 
+ &  c_t+ k_{t+1} = z_t k_t^\theta \\
+ & \log z_t=\rho\log z_{t-1}+\epsilon_t, \quad \epsilon\sim N(0,\sigma_\epsilon^2).
+\end{align}$$
+
+This problem has a known solution: consume
+and save a constant fraction of output. 
+So why put it on the computer?
+The answer to this is because we can use
+it to test our codes.  
+
+Another check on the codes is a simple method of 
+undetermined coefficients. This method involves linearizing
+first order conditions, guessing the form of the solution with unknown
+coefficients, substituting this into the first-order conditions,
+and then figuring out what the coefficients have to be to make the
+conditions hold exactly.
+For the problem above, we have a first-order condition
+of the form:
+
+$$\begin{equation}
+  {1\over z_t k_t^\theta-k_{t+1}} = {\beta \theta k_{t+1}^{\theta-1} \over z_{t+1}k_{t+1}^\theta-k_{t+2}}. 
+\end{equation}$$
+
+If we log-linearize this equation, it has the form:
+
+$$\begin{equation}
+  0= E_t\{ a_2 \hat k_{t+2} + a_1 \hat k_{t+1}+ a_0 \hat k_t + b_1 \hat z_{t+1} + b_0\hat z_t\}
+\end{equation}$$
+
+where $\hat k=\log(k/k_ss)$ and the coefficients are known functions
+of parameters.
+Guess a solution of the form:
+
+$$\begin{equation}
+  \hat k_{t+1} = \gamma_1 \hat k_t + \gamma_2\hat z_t,
+\end{equation}$$
+
+which we substitute into the linearized equation along with the equation for 
+$\hat z_t$. From that, we get two equations in two unknows: $\gamma_1$, $\gamma_2$.
+
+What are these equations? They are the coefficients on $\hat k_t$ and $\hat z_t$
+after plugging in our guess and taking expectations.
+Let's try doing this:
+
+$$\begin{align*}
+  0 &= E_t\{ a_2 \hat k_{t+2} + a_1 \hat k_{t+1}+ a_0 \hat k_t + b_1 \hat z_{t+1} + b_0\hat z_t\}  \\
+    &= E_t\{ a_2 (\gamma_1\hat k_{t+1}+\gamma_2\hat z_{t+1})  + a_1 (\gamma_1 \hat k_t + \gamma_2\hat z_t)
+           + a_0 \hat k_t + b_1 (\rho\hat z_t + \epsilon_{t+1})  + b_0\hat z_t\}\\
+    &= E_t\{ a_2 (\gamma_1(\gamma_1\hat k_t+\gamma_2\hat z_t)+\gamma_2(\rho \hat z_t+\epsilon_{t+1}))  \\
+    &\qquad\qquad + a_1 (\gamma_1 \hat k_t + \gamma_2\hat z_t)+ a_0 \hat k_t + b_1 (\rho\hat z_t + \epsilon_{t+1})  + b_0\hat z_t\}\\
+    &= a_2 (\gamma_1(\gamma_1\hat k_t+\gamma_2\hat z_t)+\gamma_2\rho \hat z_t)  \\
+    &\qquad\qquad + a_1 (\gamma_1 \hat k_t + \gamma_2\hat z_t)+ a_0 \hat k_t + b_1 \rho\hat z_t+ b_0\hat z_t\} \\
+    &= (a_2 \gamma_1^2+ a_1 \gamma_1 + a_0) \hat k_t 
+       +(a_2\gamma_1 \gamma_2 +a_2 \gamma_2\rho + a_1\gamma_2 + b_1 \rho + b_0)\hat z_t.
+\end{align*}$$
+
+
+For this to hold for any $\hat k_t$ and $\hat z_t$, the coefficients must be 0
+and that gives us the two equations in two unknowns:
+
+$$\begin{align}
+   0 &= a_2 \gamma_1^2+ a_1 \gamma_1 + a_0 \cr
+   0 &= a_2\gamma_1 \gamma_2 +a_2 \gamma_2\rho + a_1\gamma_2 + b_1 \rho + b_0.\cr
+\end{align}$$
+
+Notice that the first equation is a quadratic in $\gamma_1$. Try computing this
+and compare the two roots: they should be reciprocals of each other (if $\beta=1$).
+Once we solve that equation, the second equation is is linear in $\gamma_2$.
+We will see that the nature of this problem never changes. More generally,
+the coefficients on endogenous terms will solve a quadratic equation and
+the coefficients on the exogenous terms will solve a linear equation.
+
+
+"""
+
+
+# ╔═╡ 33777777-7777-4777-8777-777777777777
+md"""
+
+---
+
+1. See the numerical methods appendix for details and Julia scripts for 
+   Gaussian quadrature.
+
+2. See the numerical methods appendix for details and Julia scripts for 
+   discretizing an autoregressive process.
+
+3. See the numerical methods appendix for details and Julia scripts for 
+   the bisection method.
+
+"""
 
 # ╔═╡ 77777777-7777-4777-8777-777777777777
 # Adjust notebook width for lecture notes.
@@ -402,6 +751,8 @@ HTML("""
   }
 </style>
 """)
+
+
 
 
 
@@ -425,21 +776,19 @@ PlutoUI = "~0.7.75"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.13.0"
-manifest_format = "2.1"
+julia_version = "1.12.7"
+manifest_format = "2.0"
 project_hash = "51dffb5fb81f2cd18601eedb94a4e5d2bf96dae5"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
-registries = "General"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
 git-tree-sha1 = "9876e1e164b144ca45e9e3198d0b689cadfed9ff"
-registries = "General"
 uuid = "66dad0bd-aa9a-41b7-9441-69ab47430ed8"
 version = "1.1.3"
 
@@ -457,42 +806,36 @@ version = "1.11.0"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
-registries = "General"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
 version = "0.1.9"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "1b96ea4a01afe0ea4090c5c8039690672dd13f2e"
-registries = "General"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.9+0"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
-registries = "General"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.18.5+0"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
 git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
-registries = "General"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.8"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
 git-tree-sha1 = "b0fd3f56fa442f81e0a47815c92245acfaaa4e34"
-registries = "General"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 version = "3.31.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
 git-tree-sha1 = "67e11ee83a43eb71ddc950302c53bf33f0690dfe"
-registries = "General"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 version = "0.12.1"
 weakdeps = ["StyledStrings"]
@@ -503,7 +846,6 @@ weakdeps = ["StyledStrings"]
 [[deps.ColorVectorSpace]]
 deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Requires", "Statistics", "TensorCore"]
 git-tree-sha1 = "8b3b6f87ce8f65a2b4f857528fd8d70086cd72b1"
-registries = "General"
 uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
 version = "0.11.0"
 
@@ -516,38 +858,33 @@ version = "0.11.0"
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
-registries = "General"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.5.5+2"
+version = "1.3.1+2"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
 git-tree-sha1 = "d9d26935a0bcffc87d2613ce14c527c99fc543fd"
-registries = "General"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
 version = "2.5.0"
 
 [[deps.Contour]]
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
-registries = "General"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.3"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
-registries = "General"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.16.0"
 
 [[deps.DataStructures]]
 deps = ["OrderedCollections"]
 git-tree-sha1 = "e357641bb3e0638d353c4b29ea0e40ea644066a6"
-registries = "General"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 version = "0.19.3"
 
@@ -559,20 +896,17 @@ version = "1.11.0"
 [[deps.Dbus_jll]]
 deps = ["Artifacts", "Expat_jll", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "473e9afc9cf30814eb67ffa5f2db7df82c3ad9fd"
-registries = "General"
 uuid = "ee1fde0b-3d02-5ea6-8484-8dfef6360eab"
 version = "1.16.2+0"
 
 [[deps.DelimitedFiles]]
 deps = ["Mmap"]
 git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
-registries = "General"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
 
 [[deps.DocStringExtensions]]
 git-tree-sha1 = "7442a5dfe1ebb773c29cc2962a8980f47221d76c"
-registries = "General"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.9.5"
 
@@ -584,35 +918,30 @@ version = "1.7.0"
 [[deps.EpollShim_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "8a4be429317c42cfae6a7fc03c31bad1970c310d"
-registries = "General"
 uuid = "2702e6a9-849d-5ed8-8c21-79e8b8f9ee43"
 version = "0.0.20230411+1"
 
 [[deps.ExceptionUnwrapping]]
 deps = ["Test"]
 git-tree-sha1 = "d36f682e590a83d63d1c7dbd287573764682d12a"
-registries = "General"
 uuid = "460bff9d-24e4-43bc-9d9f-a8973cb893f4"
 version = "0.1.11"
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "27af30de8b5445644e8ffe3bcb0d72049c089cf1"
-registries = "General"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.7.3+0"
 
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
 git-tree-sha1 = "95ecf07c2eea562b5adbd0696af6db62c0f52560"
-registries = "General"
 uuid = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 version = "0.4.5"
 
 [[deps.FFMPEG_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
 git-tree-sha1 = "01ba9d15e9eae375dc1eb9589df76b3572acd3f2"
-registries = "General"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "8.0.1+0"
 
@@ -623,48 +952,41 @@ version = "1.11.0"
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
 git-tree-sha1 = "05882d6995ae5c12bb5f36dd2ed3f61c98cbb172"
-registries = "General"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.5"
 
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
 git-tree-sha1 = "f85dac9a96a01087df6e3a749840015a0ca3817d"
-registries = "General"
 uuid = "a3f928ae-7b40-5064-980b-68af3947d34b"
 version = "2.17.1+0"
 
 [[deps.Format]]
 git-tree-sha1 = "9c68794ef81b08086aeb32eeaf33531668d5f5fc"
-registries = "General"
 uuid = "1fa38f19-a742-5d3f-a2b9-30dd87b9d5f8"
 version = "1.3.7"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
-registries = "General"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
 version = "2.13.4+0"
 
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "7a214fdac5ed5f59a22c2d9a885a16da1c74bbc7"
-registries = "General"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
 version = "1.0.17+0"
 
 [[deps.GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll", "libdecor_jll", "xkbcommon_jll"]
 git-tree-sha1 = "b7bfd56fa66616138dfe5237da4dc13bbd83c67f"
-registries = "General"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 version = "3.4.1+0"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Qt6Wayland_jll", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
 git-tree-sha1 = "ee0585b62671ce88e48d3409733230b401c9775c"
-registries = "General"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
 version = "0.73.22"
 
@@ -677,76 +999,65 @@ version = "0.73.22"
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "FreeType2_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt6Base_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "7dd7173f7129a1b6f84e0f03e0890cd1189b0659"
-registries = "General"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
 version = "0.73.22+0"
 
 [[deps.GettextRuntime_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
 git-tree-sha1 = "45288942190db7c5f760f59c04495064eedf9340"
-registries = "General"
 uuid = "b0724c58-0f36-5564-988d-3bb0596ebc4a"
 version = "0.22.4+0"
 
 [[deps.Ghostscript_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "38044a04637976140074d0b0621c1edf0eb531fd"
-registries = "General"
 uuid = "61579ee1-b43e-5ca0-a5da-69d92c66a64b"
 version = "9.55.1+0"
 
 [[deps.Glib_jll]]
 deps = ["Artifacts", "GettextRuntime_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
 git-tree-sha1 = "24f6def62397474a297bfcec22384101609142ed"
-registries = "General"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.86.3+0"
 
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "8a6dbda1fd736d60cc477d99f2e7a042acfa46e8"
-registries = "General"
 uuid = "3b182d85-2403-5c21-9c21-1e1f0cc25472"
 version = "1.3.15+0"
 
 [[deps.Grisu]]
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
-registries = "General"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
 git-tree-sha1 = "5e6fe50ae7f23d171f44e311c2960294aaa0beb5"
-registries = "General"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 version = "1.10.19"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
 git-tree-sha1 = "f923f9a774fcf3f5cb761bfa43aeadd689714813"
-registries = "General"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "8.5.1+0"
 
 [[deps.Hyperscript]]
 deps = ["Test"]
 git-tree-sha1 = "179267cfa5e712760cd43dcae385d7ea90cc25a4"
-registries = "General"
 uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
 version = "0.0.5"
 
 [[deps.HypertextLiteral]]
 deps = ["Tricks"]
 git-tree-sha1 = "7134810b1afce04bbc1045ca1985fbe81ce17653"
-registries = "General"
 uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 version = "0.9.5"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
 git-tree-sha1 = "0ee181ec08df7d7c911901ea38baf16f755114dc"
-registries = "General"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "1.0.0"
 
@@ -757,28 +1068,24 @@ version = "1.11.0"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "b2d91fe939cae05960e760110b328288867b5758"
-registries = "General"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
 version = "0.2.6"
 
 [[deps.JLFzf]]
 deps = ["REPL", "Random", "fzf_jll"]
 git-tree-sha1 = "82f7acdc599b65e0f8ccd270ffa1467c21cb647b"
-registries = "General"
 uuid = "1019f520-868f-41f5-a6de-eb00f4b6a39c"
 version = "0.1.11"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
 git-tree-sha1 = "0533e564aae234aff59ab625543145446d8b6ec2"
-registries = "General"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.7.1"
 
 [[deps.JSON]]
 deps = ["Dates", "Logging", "Parsers", "PrecompileTools", "StructUtils", "UUIDs", "Unicode"]
 git-tree-sha1 = "06ea418d0c95878c8f3031023951edcf25b9e0ef"
-registries = "General"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "1.2.0"
 
@@ -791,7 +1098,6 @@ version = "1.2.0"
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "b6893345fd6658c8e475d40155789f4860ac3b21"
-registries = "General"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "3.1.4+0"
 
@@ -803,41 +1109,35 @@ version = "1.12.0"
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "059aabebaa7c82ccb853dd4a0ee9d17796f7e1bc"
-registries = "General"
 uuid = "c1c5ebd0-6772-5130-a774-d5fcae4a789d"
 version = "3.100.3+0"
 
 [[deps.LERC_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "aaafe88dccbd957a8d82f7d05be9b69172e0cee3"
-registries = "General"
 uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
 version = "4.0.1+0"
 
 [[deps.LLVMOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "eb62a3deb62fc6d8822c0c4bef73e4412419c5d8"
-registries = "General"
 uuid = "1d63c593-3942-5779-bab2-d838dc0a180e"
 version = "18.1.8+0"
 
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "1c602b1127f4751facb671441ca72715cc95938a"
-registries = "General"
 uuid = "dd4b983a-f0e5-5f8d-a1b7-129d4a5fb1ac"
 version = "2.10.3+0"
 
 [[deps.LaTeXStrings]]
 git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
-registries = "General"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 version = "1.4.0"
 
 [[deps.Latexify]]
 deps = ["Format", "Ghostscript_jll", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
 git-tree-sha1 = "44f93c47f9cd6c7e431f2f2091fcba8f01cd7e8f"
-registries = "General"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 version = "0.16.10"
 
@@ -856,12 +1156,12 @@ version = "0.16.10"
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
-version = "1.0.0"
+version = "0.6.4"
 
 [[deps.LibCURL_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "Zlib_jll", "Zstd_jll", "nghttp2_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "8.18.0+1"
+version = "8.15.0+0"
 
 [[deps.LibGit2]]
 deps = ["LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
@@ -869,14 +1169,14 @@ uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 version = "1.11.0"
 
 [[deps.LibGit2_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "PCRE2_jll", "Zlib_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll"]
 uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
-version = "1.9.1+0"
+version = "1.9.0+0"
 
 [[deps.LibSSH2_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl", "OpenSSL_jll", "Zlib_jll"]
+deps = ["Artifacts", "Libdl", "OpenSSL_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.11.103+0"
+version = "1.11.3+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -885,54 +1185,47 @@ version = "1.11.0"
 [[deps.Libffi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "c8da7e6a91781c41a863611c7e966098d783c57a"
-registries = "General"
 uuid = "e9f186c6-92d2-5b65-8a66-fee21dc1b490"
 version = "3.4.7+0"
 
 [[deps.Libglvnd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll"]
 git-tree-sha1 = "d36c21b9e7c172a44a10484125024495e2625ac0"
-registries = "General"
 uuid = "7e76a0d4-f3c7-5321-8279-8d96eeed0f29"
 version = "1.7.1+1"
 
 [[deps.Libiconv_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "be484f5c92fad0bd8acfef35fe017900b0b73809"
-registries = "General"
 uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
 version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "97bbca976196f2a1eb9607131cb108c69ec3f8a6"
-registries = "General"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
 version = "2.41.3+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
 git-tree-sha1 = "f04133fe05eff1667d2054c53d59f9122383fe05"
-registries = "General"
 uuid = "89763e89-9b03-5906-acba-b20f662cd828"
 version = "4.7.2+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "d0205286d9eceadc518742860bf23f703779a3d6"
-registries = "General"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.41.3+0"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-version = "1.13.0"
+version = "1.12.0"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "13ca9e2586b89836fd20cccf56e57e2b9ae7f38f"
-registries = "General"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 version = "0.3.29"
 
@@ -953,19 +1246,16 @@ version = "1.11.0"
 [[deps.LoggingExtras]]
 deps = ["Dates", "Logging"]
 git-tree-sha1 = "f00544d95982ea270145636c181ceda21c4e2575"
-registries = "General"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 version = "1.2.0"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
-registries = "General"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
 version = "1.1.0"
 
 [[deps.MacroTools]]
 git-tree-sha1 = "1e0228a030642014fe5cfe68c2c0a818f9e3f522"
-registries = "General"
 uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.16"
 
@@ -977,27 +1267,23 @@ version = "1.11.0"
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
 git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
-registries = "General"
 uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
 version = "1.1.9"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "ff69a2b1330bcb730b9ac1ab7dd680176f5896b8"
-registries = "General"
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.1010+0"
 
 [[deps.Measures]]
 git-tree-sha1 = "b513cedd20d9c914783d8ad83d08120702bf2c77"
-registries = "General"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.3"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
-registries = "General"
 uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
 version = "1.2.0"
 
@@ -1007,12 +1293,11 @@ version = "1.11.0"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2026.8.13"
+version = "2025.11.4"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
 git-tree-sha1 = "9b8215b1ee9e78a293f99797cd31375471b2bcae"
-registries = "General"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.1.3"
 
@@ -1023,24 +1308,22 @@ version = "1.3.0"
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "b6aa4566bb7ae78498a5e68943863fa8b5231b59"
-registries = "General"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
 version = "1.3.6+0"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.30+0"
+version = "0.3.29+0"
 
 [[deps.OpenLibm_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.7+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "NetworkOptions", "OpenSSL_jll", "Sockets"]
 git-tree-sha1 = "1d1aaa7d449b58415f97d2839c318b70ffb525a0"
-registries = "General"
 uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
 version = "1.6.1"
 
@@ -1052,46 +1335,41 @@ version = "3.5.6+0"
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "e2bb57a313a74b8104064b7efd01406c0a50d2ff"
-registries = "General"
 uuid = "91d4177d-7536-5919-b921-800302f37372"
 version = "1.6.1+0"
 
 [[deps.OrderedCollections]]
 git-tree-sha1 = "05868e21324cede2207c6f0f466b4bfef6d5e7ee"
-registries = "General"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.8.1"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.46.0+0"
+version = "10.44.0+1"
 
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "0662b083e11420952f2e62e17eddae7fc07d5997"
-registries = "General"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
 version = "1.57.0+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "7d2f8f21da5db6a806faf7b9b292296da42b2810"
-registries = "General"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.8.3"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
 git-tree-sha1 = "db76b1ecd5e9715f3d043cec13b2ec93ce015d53"
-registries = "General"
 uuid = "30392449-352a-5448-841d-b1acce4e97dc"
 version = "0.44.2+0"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "Zstd_jll", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.13.0"
+version = "1.12.1"
 weakdeps = ["REPL"]
 
     [deps.Pkg.extensions]
@@ -1100,21 +1378,18 @@ weakdeps = ["REPL"]
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
 git-tree-sha1 = "41031ef3a1be6f5bbbf3e8073f210556daeae5ca"
-registries = "General"
 uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 version = "3.3.0"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "StableRNGs", "Statistics"]
 git-tree-sha1 = "26ca162858917496748aad52bb5d3be4d26a228a"
-registries = "General"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.4.4"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "Unzip"]
 git-tree-sha1 = "12ce661880f8e309569074a61d3767e5756a199f"
-registries = "General"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.41.1"
 
@@ -1135,21 +1410,18 @@ version = "1.41.1"
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
 git-tree-sha1 = "db8a06ef983af758d285665a0398703eb5bc1d66"
-registries = "General"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.75"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
 git-tree-sha1 = "07a921781cab75691315adc645096ed5e370cb77"
-registries = "General"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 version = "1.3.3"
 
 [[deps.Preferences]]
 deps = ["TOML"]
 git-tree-sha1 = "522f093a29b31a93e34eaea17ba055d850edea28"
-registries = "General"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.5.1"
 
@@ -1160,40 +1432,35 @@ version = "1.11.0"
 
 [[deps.PtrArrays]]
 git-tree-sha1 = "1d36ef11a9aaf1e8b74dacc6a731dd1de8fd493d"
-registries = "General"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
 version = "1.3.0"
 
 [[deps.Qt6Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Vulkan_Loader_jll", "Xorg_libSM_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_cursor_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "libinput_jll", "xkbcommon_jll"]
 git-tree-sha1 = "34f7e5d2861083ec7596af8b8c092531facf2192"
-registries = "General"
 uuid = "c0090381-4147-56d7-9ebc-da0b1113ec56"
 version = "6.8.2+2"
 
 [[deps.Qt6Declarative_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6ShaderTools_jll"]
 git-tree-sha1 = "da7adf145cce0d44e892626e647f9dcbe9cb3e10"
-registries = "General"
 uuid = "629bc702-f1f5-5709-abd5-49b8460ea067"
 version = "6.8.2+1"
 
 [[deps.Qt6ShaderTools_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll"]
 git-tree-sha1 = "9eca9fc3fe515d619ce004c83c31ffd3f85c7ccf"
-registries = "General"
 uuid = "ce943373-25bb-56aa-8eca-768745ed7b5a"
 version = "6.8.2+1"
 
 [[deps.Qt6Wayland_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Qt6Base_jll", "Qt6Declarative_jll"]
 git-tree-sha1 = "8f528b0851b5b7025032818eb5abbeb8a736f853"
-registries = "General"
 uuid = "e99dba38-086e-5de3-a5b1-6e4c66e897c3"
 version = "6.8.2+2"
 
 [[deps.REPL]]
-deps = ["Base64", "Dates", "FileWatching", "InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
+deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 version = "1.11.0"
 
@@ -1205,45 +1472,39 @@ version = "1.11.0"
 [[deps.RecipesBase]]
 deps = ["PrecompileTools"]
 git-tree-sha1 = "5c3d09cc4f31f5fc6af001c250bf1278733100ff"
-registries = "General"
 uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 version = "1.3.4"
 
 [[deps.RecipesPipeline]]
 deps = ["Dates", "NaNMath", "PlotUtils", "PrecompileTools", "RecipesBase"]
 git-tree-sha1 = "45cf9fd0ca5839d06ef333c8201714e888486342"
-registries = "General"
 uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 version = "0.6.12"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
-registries = "General"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "1.2.2"
 
 [[deps.RelocatableFolders]]
 deps = ["SHA", "Scratch"]
 git-tree-sha1 = "ffdaf70d81cf6ff22c2b6e733c900c3321cab864"
-registries = "General"
 uuid = "05181044-ff0b-4ac5-8273-598c1e38db00"
 version = "1.0.1"
 
 [[deps.Requires]]
 deps = ["UUIDs"]
 git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
-registries = "General"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.1"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
-version = "1.0.0"
+version = "0.7.0"
 
 [[deps.Scratch]]
 deps = ["Dates"]
 git-tree-sha1 = "9b81b8393e50b7d4e6d0a9f14e192294d3b7c109"
-registries = "General"
 uuid = "6c6a2e73-6563-6170-7368-637461726353"
 version = "1.3.0"
 
@@ -1254,13 +1515,11 @@ version = "1.11.0"
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
 git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
-registries = "General"
 uuid = "992d4aef-0814-514b-bc4d-f2e9a6c4116f"
 version = "1.0.3"
 
 [[deps.SimpleBufferStream]]
 git-tree-sha1 = "f305871d2f381d21527c770d4788c06c097c9bc1"
-registries = "General"
 uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
 version = "1.2.0"
 
@@ -1271,26 +1530,23 @@ version = "1.11.0"
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
 git-tree-sha1 = "64d974c2e6fdf07f8155b5b2ca2ffa9069b608d9"
-registries = "General"
 uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
 version = "1.2.2"
 
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-version = "1.13.0"
+version = "1.12.0"
 
 [[deps.StableRNGs]]
 deps = ["Random"]
 git-tree-sha1 = "4f96c596b8c8258cc7d3b19797854d368f243ddc"
-registries = "General"
 uuid = "860ef19b-820b-49d6-a774-d7a799459cd3"
 version = "1.0.4"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "ae3bb1eb3bba077cd276bc5cfc337cc65c3075c0"
-registries = "General"
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 version = "1.11.1"
 weakdeps = ["SparseArrays"]
@@ -1301,21 +1557,18 @@ weakdeps = ["SparseArrays"]
 [[deps.StatsAPI]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "178ed29fd5b2a2cfc3bd31c13375ae925623ff36"
-registries = "General"
 uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 version = "1.8.0"
 
 [[deps.StatsBase]]
 deps = ["AliasTables", "DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
 git-tree-sha1 = "a136f98cefaf3e2924a66bd75173d1c891ab7453"
-registries = "General"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.34.7"
 
 [[deps.StructUtils]]
 deps = ["Dates", "UUIDs"]
 git-tree-sha1 = "cd47aa083c9c7bdeb7b92de26deb46d6a33163c9"
-registries = "General"
 uuid = "ec057cc2-7a8d-4b58-b3b3-92acb9f63b42"
 version = "2.5.1"
 
@@ -1332,9 +1585,9 @@ uuid = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
 version = "1.11.0"
 
 [[deps.SuiteSparse_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl", "libblastrampoline_jll"]
+deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "7.10.1+0"
+version = "7.8.3+2"
 
 [[deps.TOML]]
 deps = ["Dates"]
@@ -1349,7 +1602,6 @@ version = "1.10.0"
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "1feb45f88d133a655e001435632f019a9a1bcdb6"
-registries = "General"
 uuid = "62fd8b95-f654-4bbd-a8a5-9c27f68ccd50"
 version = "0.1.1"
 
@@ -1360,19 +1612,16 @@ version = "1.11.0"
 
 [[deps.TranscodingStreams]]
 git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
-registries = "General"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.11.3"
 
 [[deps.Tricks]]
 git-tree-sha1 = "311349fd1c93a31f783f977a71e8b062a57d4101"
-registries = "General"
 uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 version = "0.1.13"
 
 [[deps.URIs]]
 git-tree-sha1 = "bef26fb046d031353ef97a82e3fdb6afe7f21b1a"
-registries = "General"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
 version = "1.6.1"
 
@@ -1388,202 +1637,173 @@ version = "1.11.0"
 [[deps.UnicodeFun]]
 deps = ["REPL"]
 git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
-registries = "General"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
 
 [[deps.Unzip]]
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
-registries = "General"
 uuid = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 version = "0.2.0"
 
 [[deps.Vulkan_Loader_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Wayland_jll", "Xorg_libX11_jll", "Xorg_libXrandr_jll", "xkbcommon_jll"]
 git-tree-sha1 = "2f0486047a07670caad3a81a075d2e518acc5c59"
-registries = "General"
 uuid = "a44049a8-05dd-5a78-86c9-5fde0876e88c"
 version = "1.3.243+0"
 
 [[deps.Wayland_jll]]
 deps = ["Artifacts", "EpollShim_jll", "Expat_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
 git-tree-sha1 = "96478df35bbc2f3e1e791bc7a3d0eeee559e60e9"
-registries = "General"
 uuid = "a2964d1f-97da-50d4-b82a-358c7fce9d89"
 version = "1.24.0+0"
 
 [[deps.XZ_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "9cce64c0fdd1960b597ba7ecda2950b5ed957438"
-registries = "General"
 uuid = "ffd25f8a-64ca-5728-b0f7-c24cf3aae800"
 version = "5.8.2+0"
 
 [[deps.Xorg_libICE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "a3ea76ee3f4facd7a64684f9af25310825ee3668"
-registries = "General"
 uuid = "f67eecfb-183a-506d-b269-f58e52b52d7c"
 version = "1.1.2+0"
 
 [[deps.Xorg_libSM_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libICE_jll"]
 git-tree-sha1 = "9c7ad99c629a44f81e7799eb05ec2746abb5d588"
-registries = "General"
 uuid = "c834827a-8449-5923-a945-d239c165b7dd"
 version = "1.2.6+0"
 
 [[deps.Xorg_libX11_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
 git-tree-sha1 = "b5899b25d17bf1889d25906fb9deed5da0c15b3b"
-registries = "General"
 uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
 version = "1.8.12+0"
 
 [[deps.Xorg_libXau_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "aa1261ebbac3ccc8d16558ae6799524c450ed16b"
-registries = "General"
 uuid = "0c0b7dd1-d40b-584c-a123-a41640f87eec"
 version = "1.0.13+0"
 
 [[deps.Xorg_libXcursor_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXfixes_jll", "Xorg_libXrender_jll"]
 git-tree-sha1 = "6c74ca84bbabc18c4547014765d194ff0b4dc9da"
-registries = "General"
 uuid = "935fb764-8cf2-53bf-bb30-45bb1f8bf724"
 version = "1.2.4+0"
 
 [[deps.Xorg_libXdmcp_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "52858d64353db33a56e13c341d7bf44cd0d7b309"
-registries = "General"
 uuid = "a3789734-cfe1-5b06-b2d0-1dd0d9d62d05"
 version = "1.1.6+0"
 
 [[deps.Xorg_libXext_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
 git-tree-sha1 = "a4c0ee07ad36bf8bbce1c3bb52d21fb1e0b987fb"
-registries = "General"
 uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
 version = "1.3.7+0"
 
 [[deps.Xorg_libXfixes_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
 git-tree-sha1 = "75e00946e43621e09d431d9b95818ee751e6b2ef"
-registries = "General"
 uuid = "d091e8ba-531a-589c-9de9-94069b037ed8"
 version = "6.0.2+0"
 
 [[deps.Xorg_libXi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll", "Xorg_libXfixes_jll"]
 git-tree-sha1 = "a376af5c7ae60d29825164db40787f15c80c7c54"
-registries = "General"
 uuid = "a51aa0fd-4e3c-5386-b890-e753decda492"
 version = "1.8.3+0"
 
 [[deps.Xorg_libXinerama_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll"]
 git-tree-sha1 = "a5bc75478d323358a90dc36766f3c99ba7feb024"
-registries = "General"
 uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
 version = "1.1.6+0"
 
 [[deps.Xorg_libXrandr_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXext_jll", "Xorg_libXrender_jll"]
 git-tree-sha1 = "aff463c82a773cb86061bce8d53a0d976854923e"
-registries = "General"
 uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
 version = "1.5.5+0"
 
 [[deps.Xorg_libXrender_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
 git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
-registries = "General"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
 version = "0.9.12+0"
 
 [[deps.Xorg_libpciaccess_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "4909eb8f1cbf6bd4b1c30dd18b2ead9019ef2fad"
-registries = "General"
 uuid = "a65dc6b1-eb27-53a1-bb3e-dea574b5389e"
 version = "0.18.1+0"
 
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
 git-tree-sha1 = "bfcaf7ec088eaba362093393fe11aa141fa15422"
-registries = "General"
 uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
 version = "1.17.1+0"
 
 [[deps.Xorg_libxkbfile_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
 git-tree-sha1 = "e3150c7400c41e207012b41659591f083f3ef795"
-registries = "General"
 uuid = "cc61e674-0454-545c-8b26-ed2c68acab7a"
 version = "1.1.3+0"
 
 [[deps.Xorg_xcb_util_cursor_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_jll", "Xorg_xcb_util_renderutil_jll"]
 git-tree-sha1 = "9750dc53819eba4e9a20be42349a6d3b86c7cdf8"
-registries = "General"
 uuid = "e920d4aa-a673-5f3a-b3d7-f755a4d47c43"
 version = "0.1.6+0"
 
 [[deps.Xorg_xcb_util_image_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
 git-tree-sha1 = "f4fc02e384b74418679983a97385644b67e1263b"
-registries = "General"
 uuid = "12413925-8142-5f55-bb0e-6d7ca50bb09b"
 version = "0.4.1+0"
 
 [[deps.Xorg_xcb_util_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll"]
 git-tree-sha1 = "68da27247e7d8d8dafd1fcf0c3654ad6506f5f97"
-registries = "General"
 uuid = "2def613f-5ad1-5310-b15b-b15d46f528f5"
 version = "0.4.1+0"
 
 [[deps.Xorg_xcb_util_keysyms_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
 git-tree-sha1 = "44ec54b0e2acd408b0fb361e1e9244c60c9c3dd4"
-registries = "General"
 uuid = "975044d2-76e6-5fbe-bf08-97ce7c6574c7"
 version = "0.4.1+0"
 
 [[deps.Xorg_xcb_util_renderutil_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
 git-tree-sha1 = "5b0263b6d080716a02544c55fdff2c8d7f9a16a0"
-registries = "General"
 uuid = "0d47668e-0667-5a69-a72c-f761630bfb7e"
 version = "0.3.10+0"
 
 [[deps.Xorg_xcb_util_wm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xcb_util_jll"]
 git-tree-sha1 = "f233c83cad1fa0e70b7771e0e21b061a116f2763"
-registries = "General"
 uuid = "c22f9ab0-d5fe-5066-847c-f4bb1cd4e361"
 version = "0.4.2+0"
 
 [[deps.Xorg_xkbcomp_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxkbfile_jll"]
 git-tree-sha1 = "801a858fc9fb90c11ffddee1801bb06a738bda9b"
-registries = "General"
 uuid = "35661453-b289-5fab-8a00-3d9160c6a3a4"
 version = "1.4.7+0"
 
 [[deps.Xorg_xkeyboard_config_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xkbcomp_jll"]
 git-tree-sha1 = "00af7ebdc563c9217ecc67776d1bbf037dbcebf4"
-registries = "General"
 uuid = "33bec58e-1273-512f-9401-5d533626f822"
 version = "2.44.0+0"
 
 [[deps.Xorg_xtrans_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "a63799ff68005991f9d9491b6e95bd3478d783cb"
-registries = "General"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.6.0+0"
 
@@ -1593,35 +1813,32 @@ uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
 version = "1.3.1+2"
 
 [[deps.Zstd_jll]]
-deps = ["CompilerSupportLibraries_jll", "Libdl"]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "446b23e73536f84e8037f5dce465e92275f6a308"
 uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
 version = "1.5.7+1"
 
 [[deps.eudev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "c3b0e6196d50eab0c5ed34021aaa0bb463489510"
-registries = "General"
 uuid = "35ca27e7-8b34-5b7f-bca9-bdc33f59eb06"
 version = "3.2.14+0"
 
 [[deps.fzf_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "b6a34e0e0960190ac2a4363a1bd003504772d631"
-registries = "General"
 uuid = "214eeab7-80f7-51ab-84ad-2988db7cef09"
 version = "0.61.1+0"
 
 [[deps.libaom_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "371cc681c00a3ccc3fbc5c0fb91f58ba9bec1ecf"
-registries = "General"
 uuid = "a4ae2306-e953-59d6-aa16-d00cac43593b"
 version = "3.13.1+0"
 
 [[deps.libass_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "125eedcb0a4a0bba65b657251ce1d27c8714e9d6"
-registries = "General"
 uuid = "0ac62f75-1d6f-5e53-bd7c-93b484bb37c0"
 version = "0.17.4+0"
 
@@ -1633,114 +1850,96 @@ version = "5.15.0+0"
 [[deps.libdecor_jll]]
 deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_jll", "Wayland_jll", "xkbcommon_jll"]
 git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
-registries = "General"
 uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
 version = "0.2.2+0"
 
 [[deps.libdrm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
 git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
-registries = "General"
 uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
 version = "2.4.125+1"
 
 [[deps.libevdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "56d643b57b188d30cccc25e331d416d3d358e557"
-registries = "General"
 uuid = "2db6ffa8-e38f-5e21-84af-90c45d0032cc"
 version = "1.13.4+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "646634dd19587a56ee2f1199563ec056c5f228df"
-registries = "General"
 uuid = "f638f0a6-7fb0-5443-88ba-1cc74229b280"
 version = "2.0.4+0"
 
 [[deps.libinput_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "eudev_jll", "libevdev_jll", "mtdev_jll"]
 git-tree-sha1 = "91d05d7f4a9f67205bd6cf395e488009fe85b499"
-registries = "General"
 uuid = "36db933b-70db-51c0-b978-0f229ee0e533"
 version = "1.28.1+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
 git-tree-sha1 = "6ab498eaf50e0495f89e7a5b582816e2efb95f64"
-registries = "General"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
 version = "1.6.54+0"
 
 [[deps.libva_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
 git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
-registries = "General"
 uuid = "9a156e7d-b971-5f62-b2c9-67348b8fb97c"
 version = "2.23.0+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll"]
 git-tree-sha1 = "11e1772e7f3cc987e9d3de991dd4f6b2602663a5"
-registries = "General"
 uuid = "f27f6e37-5d2b-51aa-960f-b287f2bc3b7a"
 version = "1.3.8+0"
 
 [[deps.mtdev_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "b4d631fd51f2e9cdd93724ae25b2efc198b059b1"
-registries = "General"
 uuid = "009596ad-96f7-51b1-9f1b-5ce2d5e8a71e"
 version = "1.1.7+0"
 
 [[deps.nghttp2_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.67.1+0"
+version = "1.64.0+1"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.8.2+0"
+version = "17.7.0+0"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "14cc7083fc6dff3cc44f2bc435ee96d06ed79aa7"
-registries = "General"
 uuid = "1270edf5-f2f9-52d2-97e9-ab00b5d0237a"
 version = "10164.0.1+0"
 
 [[deps.x265_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "e7b67590c14d487e734dcb925924c5dc43ec85f3"
-registries = "General"
 uuid = "dfaa095f-4041-5dcd-9319-2fabd8486b76"
 version = "4.1.0+0"
 
 [[deps.xkbcommon_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xkeyboard_config_jll"]
 git-tree-sha1 = "a1fc6507a40bf504527d0d4067d718f8e179b2b8"
-registries = "General"
 uuid = "d8fb68d0-12a3-5cfd-a85a-d49703b185fd"
 version = "1.13.0+0"
-
-[registries.General]
-url = "https://github.com/JuliaRegistries/General.git"
-uuid = "23338594-aafe-5451-b93e-139f81909106"
 """
+
 
 # ╔═╡ Cell order:
 # ╟─11111111-1111-4111-8111-111111111111
-# ╟─7996ce3f-a2d1-4aed-9bad-fad683ae7c01
 # ╟─66666666-6666-4666-8666-666666666666
 # ╟─22222222-2222-4222-8222-222222222222
-# ╟─44444444-4444-4444-8444-444444444444
-# ╟─9bb36982-4d4f-4446-a7b7-8904e4daea7e
-# ╟─618d7424-efa6-4bbd-a18f-3ecf3320283a
-# ╟─76fade3f-b712-4cfc-8fee-53f9f13a375b
-# ╟─7e508426-a228-4962-8a2a-bf456c1c37c9
-# ╟─8dc8b9be-f701-4d7b-97ac-e42a700c108b
-# ╟─cfe84488-a2f0-4f58-8d51-7212f2829fa6
-# ╟─77777777-7777-4777-8777-777777777777
+# ╠═44444444-4444-4444-8444-444444444444
+# ╠═7e508426-a228-4962-8a2a-bf456c1c37c9
+# ╠═a61ff7cf-49f0-4a45-88a4-9f4cab7da31d
+# ╠═33333333-3333-5333-8333-333333333333
+# ╠═33777777-7777-4777-8777-777777777777
+# ╠═77777777-7777-4777-8777-777777777777
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
