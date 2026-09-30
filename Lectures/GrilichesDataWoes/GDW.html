@@ -17,13 +17,17 @@ window.pluto_recording_audio_url = undefined;
 <script src="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/editor.2d3393ce.js" type="module" defer></script><script src="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/index.11569726.js"></script><link rel="pluto-external-source" id="MathJax-script" href="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/tex-svg-full.f72d1ae1.js" type="text/javascript">
 <meta name="pluto-insertion-spot-preload">
 <style>
-  /* Hide Pluto.jl edit or run controls */
+  /* Target PlutoSliderServer / custom header buttons */
+  a.binder-link,
   a[href*="mybinder.org"],
   a[href*="github.com"],
+  /* Target buttons containing text or Pluto navigation elements */
   pluto-editor header,
   pluto-editor pluto-header,
-  .binder-badge {
+  div[class*="binder"],
+  div[class*="edit"] {
     display: none !important;
+    visibility: hidden !important;
   }
 </style>
   
