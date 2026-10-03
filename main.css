@@ -338,3 +338,11 @@ header h1 a:hover::after, .selection-entry p:hover::after { transform: scaleX(1)
     0 2px 0 rgb(18,40,48),
     0 4px 8px rgba(0,0,0,0.35);
 }
+
+/* Hide Pluto.jl 'Edit or run this notebook' button & container */
+pluto-banner,
+#binder-button,
+a.edit-or-run,
+a[title*="Edit or run"] {
+    display: none !important;
+}
