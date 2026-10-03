@@ -48,3 +48,11 @@
 #prev-btn { left: 2vw;
 }
 #next-btn { right: 2vw; }
+
+/* Hide Pluto.jl 'Edit or run this notebook' button & container */
+pluto-banner,
+#binder-button,
+a.edit-or-run,
+a[title*="Edit or run"] {
+    display: none !important;
+}
