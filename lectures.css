@@ -48,17 +48,3 @@
 #prev-btn { left: 2vw;
 }
 #next-btn { right: 2vw; }
-
-/* Target Pluto's top-right navigation and export banner */
-nav#at_the_top,
-aside#binders,
-div.edit_or_run,
-a.edit_or_run,
-button.edit_or_run,
-a[title*="Edit or run"],
-#binder-button {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
