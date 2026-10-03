@@ -472,3 +472,13 @@ version = "17.7.0+0"
 # ╟─718a5417-b38b-473f-a06e-d960e0eedaf3
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
+
+html"""
+<style>
+aside#binders,
+nav#at_the_top,
+.edit_or_run {
+    display: none !important;
+}
+</style>
+"""
