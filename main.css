@@ -338,18 +338,4 @@ header h1 a:hover::after, .selection-entry p:hover::after { transform: scaleX(1)
     0 2px 0 rgb(18,40,48),
     0 4px 8px rgba(0,0,0,0.35);
 }
-
-
-/* Target Pluto's top-right navigation and export banner */
-nav#at_the_top,
-aside#binders,
-div.edit_or_run,
-a.edit_or_run,
-button.edit_or_run,
-a[title*="Edit or run"],
-#binder-button {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
 }
