@@ -339,10 +339,17 @@ header h1 a:hover::after, .selection-entry p:hover::after { transform: scaleX(1)
     0 4px 8px rgba(0,0,0,0.35);
 }
 
-/* Hide Pluto.jl 'Edit or run this notebook' button & container */
-pluto-banner,
-#binder-button,
-a.edit-or-run,
-a[title*="Edit or run"] {
+
+/* Target Pluto's top-right navigation and export banner */
+nav#at_the_top,
+aside#binders,
+div.edit_or_run,
+a.edit_or_run,
+button.edit_or_run,
+a[title*="Edit or run"],
+#binder-button {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
