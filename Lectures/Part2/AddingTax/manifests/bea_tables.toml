@@ -1,0 +1,15 @@
+[[tables]]
+dataset = "NIPA"
+table_id = "T30100"
+table_number = "3.1"
+title = "Government Current Receipts and Expenditures"
+frequency = "A"
+start_year = 1929
+unit = "Billions of dollars"
+source_file = "source_csv/bea_nipa/table_3_1.csv"
+derived_file = "csv/government_receipts_expenditures.csv"
+
+# Lines 1-31 are the current-account table used in the lecture visual.
+# Lines 32-43 are retained in the source and derived snapshots as useful
+# detail/addenda, even though they are not displayed by default.
+

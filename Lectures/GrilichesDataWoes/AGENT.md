@@ -6,7 +6,7 @@ lecture directory.
 
 ## Collaboration Rule
 
-The user controls the main Pluto notebook file (`GDW.jl`). Codex should not 
+The user controls the main Pluto notebook file (`Griliches.jl`). Codex should not 
 edit the main notebook unless the user explicitly asks for a specific patch.
 
 Codex controls supporting files:

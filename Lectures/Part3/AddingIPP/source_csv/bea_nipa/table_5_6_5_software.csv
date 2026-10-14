@@ -1,0 +1,204 @@
+Dataset,Table,Line,Label,Unit,Year,Value
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,1997,287.964
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,1998,318.126
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,1999,365.127
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2000,411.339
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2001,415.04
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2002,406.222
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2003,418.656
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2004,437.819
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2005,473.134
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2006,506.332
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2007,544.828
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2008,574.384
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2009,564.354
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2010,578.17
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2011,621.733
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2012,655.691
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2013,694.599
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2014,741.461
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2015,778.879
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2016,843.007
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2017,906.246
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2018,992.217
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2019,1074.887
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2020,1136.206
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2021,1263.225
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2022,1423.693
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2023,1515.343
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2024,1611.852
+NIPA,T50605,1,Private fixed investment in intellectual property products,Billions of dollars,2025,1727.095
+NIPA,T50605,2,Software,Billions of dollars,1997,93.754
+NIPA,T50605,2,Software,Billions of dollars,1998,109.228
+NIPA,T50605,2,Software,Billions of dollars,1999,136.644
+NIPA,T50605,2,Software,Billions of dollars,2000,156.805
+NIPA,T50605,2,Software,Billions of dollars,2001,157.653
+NIPA,T50605,2,Software,Billions of dollars,2002,152.522
+NIPA,T50605,2,Software,Billions of dollars,2003,154.983
+NIPA,T50605,2,Software,Billions of dollars,2004,166.268
+NIPA,T50605,2,Software,Billions of dollars,2005,178.634
+NIPA,T50605,2,Software,Billions of dollars,2006,189.544
+NIPA,T50605,2,Software,Billions of dollars,2007,206.39
+NIPA,T50605,2,Software,Billions of dollars,2008,223.833
+NIPA,T50605,2,Software,Billions of dollars,2009,226.045
+NIPA,T50605,2,Software,Billions of dollars,2010,226.384
+NIPA,T50605,2,Software,Billions of dollars,2011,249.756
+NIPA,T50605,2,Software,Billions of dollars,2012,272.061
+NIPA,T50605,2,Software,Billions of dollars,2013,285.584
+NIPA,T50605,2,Software,Billions of dollars,2014,303.652
+NIPA,T50605,2,Software,Billions of dollars,2015,316.26
+NIPA,T50605,2,Software,Billions of dollars,2016,347.91
+NIPA,T50605,2,Software,Billions of dollars,2017,382.945
+NIPA,T50605,2,Software,Billions of dollars,2018,422.777
+NIPA,T50605,2,Software,Billions of dollars,2019,447.351
+NIPA,T50605,2,Software,Billions of dollars,2020,478.199
+NIPA,T50605,2,Software,Billions of dollars,2021,533.132
+NIPA,T50605,2,Software,Billions of dollars,2022,601.031
+NIPA,T50605,2,Software,Billions of dollars,2023,637.986
+NIPA,T50605,2,Software,Billions of dollars,2024,685.987
+NIPA,T50605,2,Software,Billions of dollars,2025,751.336
+NIPA,T50605,3,Prepackaged software,Billions of dollars,1997,34.881
+NIPA,T50605,3,Prepackaged software,Billions of dollars,1998,43.329
+NIPA,T50605,3,Prepackaged software,Billions of dollars,1999,50.744
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2000,56.471
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2001,58.316
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2002,63.545
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2003,65.091
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2004,70.802
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2005,75.105
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2006,76.969
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2007,80.372
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2008,86.94
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2009,88.677
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2010,80.262
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2011,91.666
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2012,102.733
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2013,110.432
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2014,117.759
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2015,127.011
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2016,141.112
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2017,158.019
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2018,180.495
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2019,196.555
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2020,215.263
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2021,244.524
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2022,278.573
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2023,295.494
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2024,328.187
+NIPA,T50605,3,Prepackaged software,Billions of dollars,2025,372.394
+NIPA,T50605,4,Custom software,Billions of dollars,1997,37.805
+NIPA,T50605,4,Custom software,Billions of dollars,1998,45.184
+NIPA,T50605,4,Custom software,Billions of dollars,1999,53.613
+NIPA,T50605,4,Custom software,Billions of dollars,2000,63.923
+NIPA,T50605,4,Custom software,Billions of dollars,2001,63.437
+NIPA,T50605,4,Custom software,Billions of dollars,2002,56.49
+NIPA,T50605,4,Custom software,Billions of dollars,2003,56.173
+NIPA,T50605,4,Custom software,Billions of dollars,2004,58.728
+NIPA,T50605,4,Custom software,Billions of dollars,2005,65.809
+NIPA,T50605,4,Custom software,Billions of dollars,2006,73.301
+NIPA,T50605,4,Custom software,Billions of dollars,2007,82.443
+NIPA,T50605,4,Custom software,Billions of dollars,2008,91.127
+NIPA,T50605,4,Custom software,Billions of dollars,2009,90.865
+NIPA,T50605,4,Custom software,Billions of dollars,2010,100.366
+NIPA,T50605,4,Custom software,Billions of dollars,2011,110.391
+NIPA,T50605,4,Custom software,Billions of dollars,2012,119.071
+NIPA,T50605,4,Custom software,Billions of dollars,2013,123.081
+NIPA,T50605,4,Custom software,Billions of dollars,2014,130.264
+NIPA,T50605,4,Custom software,Billions of dollars,2015,130.372
+NIPA,T50605,4,Custom software,Billions of dollars,2016,143.992
+NIPA,T50605,4,Custom software,Billions of dollars,2017,159.361
+NIPA,T50605,4,Custom software,Billions of dollars,2018,175.208
+NIPA,T50605,4,Custom software,Billions of dollars,2019,179.574
+NIPA,T50605,4,Custom software,Billions of dollars,2020,187.67
+NIPA,T50605,4,Custom software,Billions of dollars,2021,212.125
+NIPA,T50605,4,Custom software,Billions of dollars,2022,238.197
+NIPA,T50605,4,Custom software,Billions of dollars,2023,249.473
+NIPA,T50605,4,Custom software,Billions of dollars,2024,260.432
+NIPA,T50605,4,Custom software,Billions of dollars,2025,279.052
+NIPA,T50605,5,Own-account software,Billions of dollars,1997,21.068
+NIPA,T50605,5,Own-account software,Billions of dollars,1998,20.715
+NIPA,T50605,5,Own-account software,Billions of dollars,1999,32.287
+NIPA,T50605,5,Own-account software,Billions of dollars,2000,36.412
+NIPA,T50605,5,Own-account software,Billions of dollars,2001,35.9
+NIPA,T50605,5,Own-account software,Billions of dollars,2002,32.487
+NIPA,T50605,5,Own-account software,Billions of dollars,2003,33.718
+NIPA,T50605,5,Own-account software,Billions of dollars,2004,36.738
+NIPA,T50605,5,Own-account software,Billions of dollars,2005,37.719
+NIPA,T50605,5,Own-account software,Billions of dollars,2006,39.275
+NIPA,T50605,5,Own-account software,Billions of dollars,2007,43.575
+NIPA,T50605,5,Own-account software,Billions of dollars,2008,45.766
+NIPA,T50605,5,Own-account software,Billions of dollars,2009,46.503
+NIPA,T50605,5,Own-account software,Billions of dollars,2010,45.755
+NIPA,T50605,5,Own-account software,Billions of dollars,2011,47.699
+NIPA,T50605,5,Own-account software,Billions of dollars,2012,50.256
+NIPA,T50605,5,Own-account software,Billions of dollars,2013,52.071
+NIPA,T50605,5,Own-account software,Billions of dollars,2014,55.629
+NIPA,T50605,5,Own-account software,Billions of dollars,2015,58.877
+NIPA,T50605,5,Own-account software,Billions of dollars,2016,62.806
+NIPA,T50605,5,Own-account software,Billions of dollars,2017,65.565
+NIPA,T50605,5,Own-account software,Billions of dollars,2018,67.075
+NIPA,T50605,5,Own-account software,Billions of dollars,2019,71.223
+NIPA,T50605,5,Own-account software,Billions of dollars,2020,75.266
+NIPA,T50605,5,Own-account software,Billions of dollars,2021,76.483
+NIPA,T50605,5,Own-account software,Billions of dollars,2022,84.261
+NIPA,T50605,5,Own-account software,Billions of dollars,2023,93.018
+NIPA,T50605,5,Own-account software,Billions of dollars,2024,97.368
+NIPA,T50605,5,Own-account software,Billions of dollars,2025,99.89
+NIPA,T50605,6,Research and development,Billions of dollars,1997,148.111
+NIPA,T50605,6,Research and development,Billions of dollars,1998,160.555
+NIPA,T50605,6,Research and development,Billions of dollars,1999,177.474
+NIPA,T50605,6,Research and development,Billions of dollars,2000,198.979
+NIPA,T50605,6,Research and development,Billions of dollars,2001,202.698
+NIPA,T50605,6,Research and development,Billions of dollars,2002,196.089
+NIPA,T50605,6,Research and development,Billions of dollars,2003,201.009
+NIPA,T50605,6,Research and development,Billions of dollars,2004,207.439
+NIPA,T50605,6,Research and development,Billions of dollars,2005,224.665
+NIPA,T50605,6,Research and development,Billions of dollars,2006,245.591
+NIPA,T50605,6,Research and development,Billions of dollars,2007,268.028
+NIPA,T50605,6,Research and development,Billions of dollars,2008,284.161
+NIPA,T50605,6,Research and development,Billions of dollars,2009,274.615
+NIPA,T50605,6,Research and development,Billions of dollars,2010,282.427
+NIPA,T50605,6,Research and development,Billions of dollars,2011,303.397
+NIPA,T50605,6,Research and development,Billions of dollars,2012,313.449
+NIPA,T50605,6,Research and development,Billions of dollars,2013,338.696
+NIPA,T50605,6,Research and development,Billions of dollars,2014,364.41
+NIPA,T50605,6,Research and development,Billions of dollars,2015,385.339
+NIPA,T50605,6,Research and development,Billions of dollars,2016,413.167
+NIPA,T50605,6,Research and development,Billions of dollars,2017,437.476
+NIPA,T50605,6,Research and development,Billions of dollars,2018,479.549
+NIPA,T50605,6,Research and development,Billions of dollars,2019,535.61
+NIPA,T50605,6,Research and development,Billions of dollars,2020,568.695
+NIPA,T50605,6,Research and development,Billions of dollars,2021,639.468
+NIPA,T50605,6,Research and development,Billions of dollars,2022,719.992
+NIPA,T50605,6,Research and development,Billions of dollars,2023,767.041
+NIPA,T50605,6,Research and development,Billions of dollars,2024,811.734
+NIPA,T50605,6,Research and development,Billions of dollars,2025,861.18
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,1997,46.099
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,1998,48.343
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,1999,51.009
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2000,55.554
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2001,54.688
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2002,57.611
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2003,62.664
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2004,64.112
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2005,69.835
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2006,71.197
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2007,70.41
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2008,66.39
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2009,63.693
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2010,69.359
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2011,68.58
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2012,70.181
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2013,70.318
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2014,73.4
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2015,77.281
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2016,81.93
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2017,85.825
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2018,89.891
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2019,91.925
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2020,89.312
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2021,90.624
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2022,102.671
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2023,110.316
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2024,114.131
+NIPA,T50605,26,"Entertainment, literary, and artistic originals",Billions of dollars,2025,114.578

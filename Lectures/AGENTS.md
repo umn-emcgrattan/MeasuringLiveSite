@@ -8,8 +8,10 @@ table-building work into supporting files.
 ## Core Collaboration Rule
 
 The user controls the main Pluto notebook file in each lecture directory.
-Codex should not edit a main notebook (`GDW.jl`, `MDT.jl`, `Lecture*.jl`,
-or similar) unless the user explicitly asks for a specific patch.
+Codex should not edit a main notebook (`Griliches.jl`, `Baseline.jl`,
+`ComputeBaseline.jl`, `AnalyzeBaseline.jl`, `AddingTax.jl`, `AnalyzeTax.jl`,
+`AddingIPP.jl`, `Appendix.jl`, or similar) unless the user explicitly asks for a
+specific patch.
 
 Codex may maintain supporting files:
 
@@ -49,7 +51,7 @@ Add type-specific directories as needed.
 
 ## Data Chapters
 
-Examples: `GrilichesDataWoes`, `MacroDataTheory`.
+Examples: `GrilichesDataWoes`, `Part1/Baseline`.
 
 Use:
 
@@ -79,7 +81,7 @@ variables, plotting, and HTML/table rendering.
 ## Computation-Method Chapters
 
 Example: a chapter showing several ways to compute the growth model introduced
-in `MacroDataTheory`.
+in `Part1/Baseline`.
 
 Use:
 

@@ -1,0 +1,88 @@
+Dataset,Table,Year,RowCode,RowDescription,ColumnCode,ColumnDescription,Unit,Value
+InputOutput,258,1997,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,6.816065e6
+InputOutput,258,1997,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,1.5074365e7
+InputOutput,258,1997,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,8.2583e6
+InputOutput,258,1998,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,7.154229e6
+InputOutput,258,1998,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,1.5882118e7
+InputOutput,258,1998,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,8.727889e6
+InputOutput,258,1999,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,7.642207e6
+InputOutput,258,1999,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,1.6926628e7
+InputOutput,258,1999,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,9.284421e6
+InputOutput,258,2000,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,8.374727e6
+InputOutput,258,2000,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,1.8258753e7
+InputOutput,258,2000,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,9.884027e6
+InputOutput,258,2001,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,8.302564e6
+InputOutput,258,2001,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,1.8526371e7
+InputOutput,258,2001,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.0223807e7
+InputOutput,258,2002,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,8.244668e6
+InputOutput,258,2002,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,1.8790151e7
+InputOutput,258,2002,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.0545483e7
+InputOutput,258,2003,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,8.684228e6
+InputOutput,258,2003,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,1.9735649e7
+InputOutput,258,2003,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.1051421e7
+InputOutput,258,2004,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,9.471934e6
+InputOutput,258,2004,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.1246781e7
+InputOutput,258,2004,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.1774847e7
+InputOutput,258,2005,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.0478666e7
+InputOutput,258,2005,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.3046165e7
+InputOutput,258,2005,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.2567499e7
+InputOutput,258,2006,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.110994e7
+InputOutput,258,2006,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.4414045e7
+InputOutput,258,2006,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.3304105e7
+InputOutput,258,2007,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.1776088e7
+InputOutput,258,2007,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.5732293e7
+InputOutput,258,2007,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.3956205e7
+InputOutput,258,2008,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.2255075e7
+InputOutput,258,2008,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.6502977e7
+InputOutput,258,2008,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.4247902e7
+InputOutput,258,2009,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.0481263e7
+InputOutput,258,2009,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.4487793e7
+InputOutput,258,2009,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.4006531e7
+InputOutput,258,2010,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.1430496e7
+InputOutput,258,2010,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.5970349e7
+InputOutput,258,2010,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.4539853e7
+InputOutput,258,2011,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.2450522e7
+InputOutput,258,2011,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.7505754e7
+InputOutput,258,2011,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.5055232e7
+InputOutput,258,2012,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.2978185e7
+InputOutput,258,2012,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.8659319e7
+InputOutput,258,2012,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.5681134e7
+InputOutput,258,2013,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.3508099e7
+InputOutput,258,2013,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,2.9780022e7
+InputOutput,258,2013,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.6271923e7
+InputOutput,258,2014,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.4187608e7
+InputOutput,258,2014,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,3.115299e7
+InputOutput,258,2014,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.6965381e7
+InputOutput,258,2015,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.3938924e7
+InputOutput,258,2015,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,3.1572897e7
+InputOutput,258,2015,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.7633974e7
+InputOutput,258,2016,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.4093225e7
+InputOutput,258,2016,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,3.2231508e7
+InputOutput,258,2016,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.8138284e7
+InputOutput,258,2017,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.4856027e7
+InputOutput,258,2017,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,3.3772564e7
+InputOutput,258,2017,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.8916538e7
+InputOutput,258,2018,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.5847998e7
+InputOutput,258,2018,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,3.5742229e7
+InputOutput,258,2018,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,1.989423e7
+InputOutput,258,2019,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.611797e7
+InputOutput,258,2019,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,3.6865633e7
+InputOutput,258,2019,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,2.0747663e7
+InputOutput,258,2020,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.533935e7
+InputOutput,258,2020,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,3.600317e7
+InputOutput,258,2020,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,2.066382e7
+InputOutput,258,2021,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,1.8091161e7
+InputOutput,258,2021,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,4.097e7
+InputOutput,258,2021,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,2.2878839e7
+InputOutput,258,2022,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,2.0515044e7
+InputOutput,258,2022,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,4.5600482e7
+InputOutput,258,2022,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,2.5085437e7
+InputOutput,258,2023,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,2.0424699e7
+InputOutput,258,2023,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,4.7277831e7
+InputOutput,258,2023,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,2.6853132e7
+InputOutput,258,2024,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,2.113821e7
+InputOutput,258,2024,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,4.9511321e7
+InputOutput,258,2024,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,2.8373111e7
+InputOutput,258,2025,T005,Total Intermediate,T001,Total Intermediate,Millions of dollars,2.1935765e7
+InputOutput,258,2025,T018,Total industry output (basic prices),T001,Total Intermediate,Millions of dollars,5.1586627e7
+InputOutput,258,2025,VABAS,Value Added (basic prices),T001,Total Intermediate,Millions of dollars,2.9650862e7
