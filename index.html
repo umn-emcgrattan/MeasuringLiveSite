@@ -19,6 +19,15 @@ Last Updated: 12/20/2025
   <link rel="stylesheet" href="lectures.css">
   <!-- Icon -->
   <link rel="icon" type="image/png" href="images/HHEI.png">
+
+  <style>
+    /* Styling for nested/indented sub-buttons in table of contents */
+    .selection-entry.sub-entry {
+      padding-left: 24px;
+      opacity: 0.9;
+      font-size: 0.95em;
+    }
+  </style>
 </head>
 
 <!-------------------------------------------------------------------------------------------------------------------->
@@ -91,83 +100,83 @@ Last Updated: 12/20/2025
 
   <!-- Main Section 1: Introduction -->
   <button id="introduction" class="selection-entry active" data-path="Live_Notebooks/introduction.html">
-    <p>Introduction</p>
+    <p>1. Introduction</p>
   </button>
         
   <!-- Main Section 2: Griliches Data Woes -->
   <button id="Griliches" class="selection-entry" data-path="Live_Notebooks/Griliches.html">
-    <p>Griliches Data Woes</p>
+    <p>2. Griliches Data Woes</p>
   </button>
 
   <!-- Main Section 3: Part 1 -->
   <button id="Part-1" class="selection-entry main-entry" data-path="Live_Notebooks/Baseline.html">
-    <p>Part 1: Comparing Data and Theory</p>
+    <p>3. Part 1: Comparing Data and Theory</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/ComputeBaseline.html">
+  <button id="ComputeBaseline" class="selection-entry sub-entry" data-path="Live_Notebooks/ComputeBaseline.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Computing Equilibrium</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeBaseline.html">
+  <button id="AnalyzeBaseline" class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeBaseline.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Analyzing Model Predictions</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringBaseline.html">
+  <button id="MeasuringBaseline" class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringBaseline.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Measuring Business Productivity and Value</p>
   </button>
 
   <!-- Main Section 4: Part 2 -->
   <button id="Part-2" class="selection-entry main-entry" data-path="Live_Notebooks/AddingTax.html">
-    <p>Part 2: Adding Taxes</p>
+    <p>4. Part 2: Adding Taxes</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/ComputingTax.html">
+  <button id="ComputingTax" class="selection-entry sub-entry" data-path="Live_Notebooks/ComputingTax.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Computing Equilibrium</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeTax.html">
+  <button id="AnalyzeTax" class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeTax.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Analyzing Model Predictions</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringTax.html">
+  <button id="MeasuringTax" class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringTax.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Measuring Business Productivity and Value</p>
   </button>
 
   <!-- Main Section 5: Part 3 -->
   <button id="Part-3" class="selection-entry main-entry" data-path="Live_Notebooks/AddingIPP.html">
-    <p>Part 3: Adding Intellectual Property Products</p>
+    <p>5. Part 3: Adding Intellectual Property Products</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/CompareIPP.html">
+  <button id="CompareIPP" class="selection-entry sub-entry" data-path="Live_Notebooks/CompareIPP.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Computing Equilibrium</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeIPP.html">
+  <button id="AnalyzeIPP" class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeIPP.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Analyzing Model Predictions</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringIPP.html">
+  <button id="MeasuringIPP" class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringIPP.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Measuring Business Productivity and Value</p>
   </button>
 
   <!-- Main Section 6: Part 4 -->
   <button id="Part-4" class="selection-entry main-entry" data-path="Live_Notebooks/AddingSweat.html">
-    <p>Part 4: Adding Sweat Equity</p>
+    <p>6. Part 4: Adding Sweat Equity</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/CompareSweat.html">
+  <button id="CompareSweat" class="selection-entry sub-entry" data-path="Live_Notebooks/CompareSweat.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Computing Equilibrium</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeSweat.html">
+  <button id="AnalyzeSweat" class="selection-entry sub-entry" data-path="Live_Notebooks/AnalyzeSweat.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Analyzing Model Predictions</p>
   </button>
-  <button class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringSweat.html">
+  <button id="MeasuringSweat" class="selection-entry sub-entry" data-path="Live_Notebooks/MeasuringSweat.html">
     <p>&nbsp;&nbsp;&nbsp;&nbsp;• Measuring Business Productivity and Value</p>
   </button>
 
   <!-- Main Section 7: Epilogue -->
   <button id="Epilogue" class="selection-entry" data-path="Live_Notebooks/Epilogue.html">
-    <p>Epilogue</p>
+    <p>7. Epilogue</p>
   </button>
 
   <!-- Main Section 8: References -->
   <button id="References" class="selection-entry" data-path="Live_Notebooks/References.html">
-    <p>References</p>
+    <p>8. References</p>
   </button>
         
   <!-- Main Section 9: Appendix -->
   <button id="Appendix" class="selection-entry" data-path="Live_Notebooks/Appendix.html">
-    <p>Appendix</p>
+    <p>9. Appendix</p>
   </button>
 
 </div>
@@ -175,17 +184,25 @@ Last Updated: 12/20/2025
 
 <!-- MAIN CONTENTS -->
 
-<!-- Data Download -->
+<!-- Data Download Button (Positioned safely off sidebar) -->
 <a
   id="data-download"
   href="instructions.pdf"
   download="How_To_Run_Notebooks_Locally.pdf"
   style="
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 1000;
     display: inline-block;
     padding: 8px 14px;
     font-size: 12px;
     text-align: center;
     text-decoration: none;
+    background-color: #2b4c59;
+    color: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
   ">
 
   <span style="font-size: 14px; font-weight: bold;">Instructions:</span><br>
@@ -256,9 +273,8 @@ Last Updated: 12/20/2025
 
   /* LECTURE SELECTION */
   
-  /* Construct table of contents */
+  /* Construct table of contents listeners */
   selectionEntries.forEach((item, index) => {
-    item.querySelector('p').textContent = `${index + 1}. ${item.querySelector('p').textContent.trim()}` // Number entries
     item.addEventListener('click', () => {
         changeLecture(index); // Change to selected lecture
         toggleSelection();    // Close table of contents
@@ -296,8 +312,8 @@ Last Updated: 12/20/2025
   function changeLecture(newIdx) {
 
     // Bold selected lecture entry
-    lectureButtons[curIdx].classList.remove("active");
-    lectureButtons[newIdx].classList.add("active");
+    if (lectureButtons[curIdx]) lectureButtons[curIdx].classList.remove("active");
+    if (lectureButtons[newIdx]) lectureButtons[newIdx].classList.add("active");
 
     // Update lecture navigation buttons
     if (newIdx === 0) {
