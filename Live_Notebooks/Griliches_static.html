@@ -1304,20 +1304,21 @@ Waiting for notebook process to start... Done. Starting precompilation...</pre><
 </defs></svg>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const tocLinks = Array.from(document.querySelectorAll("pluto-toc a, .pluto-toc a, aside.toc a"));
-    const headers = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5"));
+    // 1. Locate all TOC links and headers across Pluto DOM elements
+    const tocLinks = Array.from(document.querySelectorAll("pluto-toc a, .pluto-toc a, aside.toc a, pluto-toc-section a"));
+    const headers = Array.from(document.querySelectorAll("pluto-output h1, pluto-output h2, pluto-output h3, pluto-output h4, h1, h2, h3, h4"));
 
     if (!tocLinks.length || !headers.length) return;
 
-    const cleanText = text => text.replace(/\s+/g, " ").trim().toLowerCase();
+    const cleanText = text => text.replace(/[\s\u200B-\u200D\uFEFF]+/g, " ").trim().toLowerCase();
 
-    // Map TOC links to their corresponding section headers
+    // Map links to headers
     const linkHeaderPairs = tocLinks.map(link => {
       const linkHref = link.getAttribute("href") || "";
       let matchedHeader = null;
 
       if (linkHref.startsWith("#")) {
-        const id = linkHref.substring(1);
+        const id = decodeURIComponent(linkHref.substring(1));
         matchedHeader = document.getElementById(id);
       }
 
@@ -1329,27 +1330,38 @@ Waiting for notebook process to start... Done. Starting precompilation...</pre><
       return { link, header: matchedHeader };
     }).filter(pair => pair.header !== null);
 
-    // 1. Smooth Scroll Handler on Link Click
+    // 2. Smooth Scroll on Click with Pluto offset adjustment
     linkHeaderPairs.forEach(({ link, header }) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        const elementPosition = header.getBoundingClientRect().top + window.scrollY;
-        const offsetPosition = elementPosition - 100; // Offset for fixed headers/padding
+        e.stopPropagation();
 
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
+        // Scroll the header into view with smooth behavior
+        header.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest"
         });
-      });
+
+        // Adjust slightly for fixed header top bar if needed
+        setTimeout(() => {
+          window.scrollBy({ top: -80, behavior: "smooth" });
+        }, 300);
+      }, true);
     });
 
-    // 2. Scroll-Spy Active State Handler
+    // 3. Scroll-Spy (Highlight active link on scroll)
+    const getScrollContainer = () => document.querySelector("main") || window;
+
     const onScroll = () => {
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const scrollPosition = window.scrollY || document.documentElement.scrollTop;
       let activePair = linkHeaderPairs[0];
 
       for (const pair of linkHeaderPairs) {
-        if (pair.header.offsetTop - 120 <= scrollY) {
+        const rect = pair.header.getBoundingClientRect();
+        const top = rect.top + window.scrollY;
+        
+        if (top - 140 <= scrollPosition) {
           activePair = pair;
         } else {
           break;
@@ -1361,15 +1373,18 @@ Waiting for notebook process to start... Done. Starting precompilation...</pre><
           pair.link.classList.add("current", "active");
           pair.link.style.fontWeight = "bold";
           pair.link.style.opacity = "1";
+          pair.link.style.color = "#ffffff"; 
         } else {
           pair.link.classList.remove("current", "active");
           pair.link.style.fontWeight = "normal";
-          pair.link.style.opacity = "0.7";
+          pair.link.style.opacity = "0.6";
+          pair.link.style.color = "";
         }
       });
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
   });
 </script>
