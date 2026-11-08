@@ -233,6 +233,22 @@
 .ͼ4 .cm-content :focus::selection, .ͼ4 .cm-content :focus ::selection {background-color: Highlight !important;}
 .ͼ4 .cm-content :focus {caret-color: initial !important;}
 .ͼ4 .cm-content {caret-color: transparent !important;}
+
+/* Fix scrolling for Pluto's Table of Contents sidebar widget */
+pluto-toc,
+.pluto-toc,
+aside.toc {
+  max-height: 75vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+pluto-toc section,
+.pluto-toc section {
+  max-height: 65vh !important;
+  overflow-y: auto !important;
+}
+	
 </style><meta name="viewport" content="width=device-width"><meta charset="utf-8">
 <meta name="pluto-insertion-spot-meta">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="white"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#2a2928"><meta name="color-scheme" content="light dark"><link rel="icon" type="image/png" sizes="16x16" href="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/favicon-16x16.267aebbe.png"><link rel="icon" type="image/png" sizes="32x32" href="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/favicon-32x32.1b9d3e70.png"><link rel="icon" type="image/png" sizes="96x96" href="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/favicon-96x96.26e08763.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/editor.5017d7bd.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/editor.8365375a.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonsp/Pluto.jl@0.20.21/frontend-dist/editor.a19283c8.css" type="text/css">
