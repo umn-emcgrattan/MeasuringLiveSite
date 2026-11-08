@@ -1304,39 +1304,45 @@ Waiting for notebook process to start... Done. Starting precompilation...</pre><
 </defs></svg>
 <script>
   (function () {
-    // Inject smooth scrolling globally across the entire HTML document
+    // 1. Force native smooth scrolling globally across the document
     const style = document.createElement('style');
     style.textContent = `
-      html {
+      html, body, main {
         scroll-behavior: smooth !important;
-      }
-      pluto-toc a.current, .pluto-toc a.current, aside.toc a.current {
-        font-weight: bold !important;
-        opacity: 1 !important;
-        color: #4a90e2 !important;
       }
     `;
     document.head.appendChild(style);
 
-    function initPlutoScroll() {
-      // Find headers inside Pluto cells
-      const headers = Array.from(document.querySelectorAll("pluto-output h1, pluto-output h2, pluto-output h3, pluto-output h4, h1, h2, h3, h4"));
-      
-      const cleanText = text => text.replace(/[\s\u200B-\u200D\uFEFF]+/g, " ").trim().toLowerCase();
+    function cleanText(text) {
+      return text.replace(/[\s\u200B-\u200D\uFEFF]+/g, " ").trim().toLowerCase();
+    }
 
-      // Listen for clicks on the entire page (delegation handles dynamically loaded Pluto elements)
-      document.addEventListener("click", (e) => {
-        const link = e.target.closest("pluto-toc a, .pluto-toc a, aside.toc a, a[href*='#']");
+    function setupPlutoToc() {
+      // Find the <pluto-toc> element
+      const plutoTocEl = document.querySelector("pluto-toc");
+      if (!plutoTocEl) return;
+
+      // Access the Shadow Root if Pluto uses encapsulation, or the element itself
+      const root = plutoTocEl.shadowRoot || plutoTocEl;
+      
+      // Target headers inside the Pluto document cells
+      const headers = Array.from(document.querySelectorAll("pluto-output h1, pluto-output h2, pluto-output h3, pluto-output h4, h1, h2, h3, h4"));
+
+      // Intercept clicks on links inside the TOC (including inside Shadow DOM)
+      root.addEventListener("click", (e) => {
+        const link = e.target.closest("a");
         if (!link) return;
 
         const href = link.getAttribute("href") || "";
         let targetHeader = null;
 
+        // Try matching by ID first
         if (href.startsWith("#") && href.length > 1) {
           const id = decodeURIComponent(href.substring(1));
           targetHeader = document.getElementById(id);
         }
 
+        // Fallback: match by header text content
         if (!targetHeader) {
           const linkText = cleanText(link.textContent);
           targetHeader = headers.find(h => cleanText(h.textContent) === linkText);
@@ -1346,62 +1352,21 @@ Waiting for notebook process to start... Done. Starting precompilation...</pre><
           e.preventDefault();
           e.stopPropagation();
 
-          // Smoothly scroll the target header into view
-          targetHeader.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
+          // Scroll target header smoothly into view with top offset padding
+          const headerTop = targetHeader.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: headerTop - 90,
+            behavior: "smooth"
           });
         }
       }, true);
-
-      // Scroll-Spy logic to highlight TOC items on scroll
-      const onScroll = () => {
-        const tocLinks = Array.from(document.querySelectorAll("pluto-toc a, .pluto-toc a, aside.toc a"));
-        if (!tocLinks.length || !headers.length) return;
-
-        const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-        let activeHeader = headers[0];
-
-        for (const h of headers) {
-          const top = h.getBoundingClientRect().top + window.scrollY;
-          if (top - 140 <= scrollPosition) {
-            activeHeader = h;
-          } else {
-            break;
-          }
-        }
-
-        const activeText = cleanText(activeHeader ? activeHeader.textContent : "");
-
-        tocLinks.forEach(link => {
-          const linkHref = link.getAttribute("href") || "";
-          const linkText = cleanText(link.textContent);
-          
-          let isMatch = false;
-          if (linkHref.startsWith("#") && activeHeader && activeHeader.id) {
-            isMatch = (linkHref.substring(1) === activeHeader.id);
-          }
-          if (!isMatch) {
-            isMatch = (linkText === activeText);
-          }
-
-          if (isMatch) {
-            link.classList.add("current", "active");
-          } else {
-            link.classList.remove("current", "active");
-          }
-        });
-      };
-
-      window.addEventListener("scroll", onScroll, { passive: true });
-      onScroll();
     }
 
-    // Wait until Pluto has injected its DOM elements
+    // Initialize after Pluto finishes rendering its reactive components
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => setTimeout(initPlutoScroll, 500));
+      document.addEventListener("DOMContentLoaded", () => setTimeout(setupPlutoToc, 800));
     } else {
-      setTimeout(initPlutoScroll, 500);
+      setTimeout(setupPlutoToc, 800);
     }
   })();
 </script>
