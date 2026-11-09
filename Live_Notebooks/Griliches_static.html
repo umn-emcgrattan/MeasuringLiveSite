@@ -1303,53 +1303,69 @@ Waiting for notebook process to start... Done. Starting precompilation...</pre><
 
 </defs></svg>
 <style>
-  main {
-    max-width: 58vw !important;
-    margin-right: 25vw !important;
-  }
-
-  /* Hide Pluto's banner, export controls, and header buttons */
+  /* Hide standard containers and force zero dimensions */
   pluto-header,
   pluto-banner,
   pluto-nav,
-  .edit_or_run,
-  .toggle_export_menu,
-  [class*="export"],
-  [class*="edit_or_run"] {
+  header,
+  div.export_menu,
+  button.toggle_export_menu,
+  button[title*="Edit or run"],
+  button[title*="View code"],
+  a[title*="Edit or run"],
+  a[title*="View code"] {
     display: none !important;
     visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
 </style>
 
 <script>
-  // Dynamic JavaScript observer to strip the buttons out of Pluto's Shadow DOM
-  const hidePlutoButtons = () => {
-    // Search both normal DOM and Shadow Roots
+  const purgePlutoButtons = () => {
+    // 1. Target shadow roots across all custom web components
     document.querySelectorAll('*').forEach(el => {
       if (el.shadowRoot) {
-        el.shadowRoot.querySelectorAll('button, a, div, span').forEach(child => {
-          if (child.textContent && (child.textContent.includes('Edit or run') || child.textContent.includes('View code'))) {
+        // Target headers or nav containers inside shadow roots
+        el.shadowRoot.querySelectorAll('header, nav, pluto-nav, div, button, a').forEach(child => {
+          const text = child.textContent || '';
+          const title = child.getAttribute('title') || '';
+          if (
+            text.includes('Edit or run') || 
+            text.includes('View code') || 
+            title.includes('Edit or run') || 
+            title.includes('View code')
+          ) {
             child.style.setProperty('display', 'none', 'important');
-            if (child.parentElement) child.parentElement.style.setProperty('display', 'none', 'important');
+            child.style.setProperty('visibility', 'hidden', 'important');
+            if (child.parentElement) {
+              child.parentElement.style.setProperty('display', 'none', 'important');
+            }
           }
         });
       }
     });
 
-    // Fallback for standard DOM elements
-    document.querySelectorAll('button, a, div').forEach(el => {
-      if (el.textContent && (el.textContent.includes('Edit or run') || el.textContent.includes('View code'))) {
+    // 2. Target main document DOM elements
+    document.querySelectorAll('button, a, div, header, nav').forEach(el => {
+      const text = el.textContent || '';
+      const title = el.getAttribute('title') || '';
+      if (
+        (text.includes('Edit or run') && text.includes('View code')) ||
+        title.includes('Edit or run') || 
+        title.includes('View code')
+      ) {
         el.style.setProperty('display', 'none', 'important');
+        el.style.setProperty('visibility', 'hidden', 'important');
       }
     });
   };
 
-  // Run immediately and periodically to handle Pluto's re-renders
-  hidePlutoButtons();
-  window.addEventListener('DOMContentLoaded', hidePlutoButtons);
-  window.addEventListener('load', hidePlutoButtons);
-  setInterval(hidePlutoButtons, 300);
+  // Run on load and periodically
+  purgePlutoButtons();
+  window.addEventListener('DOMContentLoaded', purgePlutoButtons);
+  window.addEventListener('load', purgePlutoButtons);
+  setInterval(purgePlutoButtons, 200);
 </script>
 </body></html>
